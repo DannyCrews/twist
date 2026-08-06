@@ -1,0 +1,89 @@
+import SwiftUI
+
+/// A letter tile, in the rack or in the input line.
+///
+/// Sized and tuned for a trackpad rather than a mouse. A trackpad gives you less precision and
+/// no resting cursor, so the tile is large, its whole rectangle is clickable rather than just
+/// the glyph, and hover response is quick but eased — a linear or instant hover reads as
+/// twitchy when the pointer is drifting the way a trackpad pointer does.
+struct TileView: View {
+    enum Role {
+        case rack       // available to click
+        case staged     // spoken for; the gap left behind in the rack
+        case entry      // sitting in the input line
+        case empty      // an unfilled slot in the input line
+    }
+
+    let letter: Character?
+    let role: Role
+    var action: (() -> Void)?
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isHovering = false
+    @State private var isPressed = false
+
+    private var size: CGSize {
+        switch role {
+        case .rack, .staged: CGSize(width: 54, height: 64)
+        case .entry, .empty: CGSize(width: 40, height: 50)
+        }
+    }
+
+    private var isInteractive: Bool { role == .rack && action != nil }
+
+    var body: some View {
+        let tile = RoundedRectangle(cornerRadius: 11, style: .continuous)
+            .fill(fill)
+            .overlay {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .strokeBorder(.separator.opacity(isHovering ? 0.9 : 0.35), lineWidth: 1)
+            }
+            .overlay {
+                Text(letter.map { String($0).uppercased() } ?? "")
+                    .font(.system(size: role == .rack ? 30 : 24, weight: .heavy, design: .rounded))
+                    .foregroundStyle(role == .staged ? AnyShapeStyle(.clear) : AnyShapeStyle(.primary))
+            }
+            .frame(width: size.width, height: size.height)
+            // The whole rectangle is the target, not just the letter inside it.
+            .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+            .scaleEffect(scale)
+            .animation(reduceMotion ? nil : .snappy(duration: 0.16, extraBounce: 0.1), value: isHovering)
+            .animation(reduceMotion ? nil : .snappy(duration: 0.12), value: isPressed)
+
+        Group {
+            if isInteractive {
+                tile
+                    .onHover { isHovering = $0 }
+                    .pointerStyle(.link)
+                    .onTapGesture { action?() }
+                    // A press gesture rather than a Button: it gives the tile a pressed state
+                    // without a Button's own highlight fighting the one drawn here.
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in isPressed = true }
+                            .onEnded { _ in isPressed = false }
+                    )
+            } else {
+                tile
+            }
+        }
+    }
+
+    private var fill: AnyShapeStyle {
+        switch role {
+        case .rack:
+            isHovering ? AnyShapeStyle(.fill.secondary) : AnyShapeStyle(.fill.tertiary)
+        case .staged:
+            AnyShapeStyle(.fill.quinary)
+        case .entry:
+            AnyShapeStyle(.tint.opacity(0.18))
+        case .empty:
+            AnyShapeStyle(.fill.quinary)
+        }
+    }
+
+    private var scale: CGFloat {
+        if isPressed { return 0.94 }
+        return isHovering ? 1.04 : 1.0
+    }
+}
