@@ -57,7 +57,7 @@ enum Snapshot {
                 let name = scheme == .light ? "light" : "dark"
                 try write(
                     GameView(model: playedModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 780),
+                    size: CGSize(width: 760, height: 860),
                     scheme: scheme,
                     to: directory.appendingPathComponent("game-\(name).png"))
                 try write(
@@ -67,27 +67,27 @@ enum Snapshot {
                     to: directory.appendingPathComponent("review-\(name).png"))
                 try write(
                     GameView(model: unstagedModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 780),
+                    size: CGSize(width: 760, height: 860),
                     scheme: scheme,
                     to: directory.appendingPathComponent("unstage-\(name).png"))
                 try write(
                     GameView(model: untimedModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 780),
+                    size: CGSize(width: 760, height: 860),
                     scheme: scheme,
                     to: directory.appendingPathComponent("untimed-\(name).png"))
                 try write(
                     StartView(app: menuModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 780),
+                    size: CGSize(width: 760, height: 860),
                     scheme: scheme,
                     to: directory.appendingPathComponent("start-\(name).png"))
                 try write(
                     GameView(model: mutedModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 780),
+                    size: CGSize(width: 760, height: 860),
                     scheme: scheme,
                     to: directory.appendingPathComponent("muted-\(name).png"))
                 try write(
                     GameView(model: pausedModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 780),
+                    size: CGSize(width: 760, height: 860),
                     scheme: scheme,
                     to: directory.appendingPathComponent("paused-\(name).png"))
                 try write(

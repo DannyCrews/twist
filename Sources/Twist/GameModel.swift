@@ -173,7 +173,7 @@ final class GameModel {
         switch session.submit(word) {
         case .accepted(let word, let points, let isBingo):
             feedback = .accepted(word: word, points: points, isBingo: isBingo)
-            sound.play(isBingo ? .bingo : .word(length: word.count))
+            sound.play(isBingo ? .bingo : .word)
         case .alreadyFound(let word):
             feedback = .repeated(word: word)
             sound.play(.reject)

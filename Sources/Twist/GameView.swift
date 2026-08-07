@@ -12,6 +12,8 @@ struct GameView: View {
         VStack(spacing: 0) {
             ScoreBar(model: model)
             Divider()
+            TimerBanner(model: model)
+            Divider()
             // The curtain covers the board *and* the rack. Hiding only the word slots would
             // still leave the letters on screen with the clock stopped, which is the whole
             // anagram to work out at leisure. Nothing below the score bar survives a pause.
@@ -19,7 +21,9 @@ struct GameView: View {
                 VStack(spacing: 0) {
                     WordBoard(model: model)
                     Divider()
+                    Spacer(minLength: 0)
                     PlayArea(model: model)
+                    Spacer(minLength: 0)
                 }
                 PausedCurtain(model: model)
             }
@@ -93,13 +97,6 @@ private struct ScoreBar: View {
 
             Spacer()
 
-            if let seconds = model.secondsRemaining {
-                TimerLabel(seconds: seconds, isPaused: model.isPaused)
-            } else {
-                Label("Untimed", systemImage: "infinity")
-                    .foregroundStyle(Theme.textSecondary)
-            }
-
             Button {
                 model.togglePause()
             } label: {
@@ -132,23 +129,61 @@ private struct ScoreBar: View {
     }
 }
 
-private struct TimerLabel: View {
-    let seconds: Int
-    var isPaused = false
+/// The clock, large and centred above the board.
+///
+/// Two parts doing different jobs. The digits are for when you look; the depleting bar is for
+/// when you do not — peripheral vision registers a shrinking edge with no reading at all, which
+/// is what makes the pressure hard to ignore while staying quiet. Deliberately on the calm side
+/// of that line: no ticking, no flashing, and the shift at fifteen seconds is warm rather than
+/// red.
+private struct TimerBanner: View {
+    let model: GameModel
 
-    private var isUrgent: Bool { seconds <= 15 && !isPaused }
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var total: Int? { model.session.settings.secondsPerRound }
+    private var remaining: Int? { model.secondsRemaining }
+    private var isUrgent: Bool { (remaining ?? .max) <= 15 && !model.isPaused }
+
+    private var fraction: Double {
+        guard let total, total > 0, let remaining else { return 1 }
+        return max(0, min(1, Double(remaining) / Double(total)))
+    }
 
     var body: some View {
-        Label {
-            Text("\(seconds / 60):\(seconds % 60, format: .number.precision(.integerLength(2)))")
-                .monospacedDigit()
-        } icon: {
-            Image(systemName: isPaused ? "pause.circle" : "timer")
+        VStack(spacing: 10) {
+            if let remaining {
+                Text("\(remaining / 60):\(remaining % 60, format: .number.precision(.integerLength(2)))")
+                    .font(.system(size: 44, weight: .semibold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(isUrgent ? Theme.urgent : Theme.textPrimary)
+                    .contentTransition(.numericText(countsDown: true))
+
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Theme.slot)
+                        Capsule()
+                            .fill(isUrgent ? Theme.urgent : Theme.accent)
+                            .frame(width: max(0, proxy.size.width * fraction))
+                    }
+                }
+                .frame(height: 6)
+            } else {
+                Label("Untimed", systemImage: "infinity")
+                    .font(.system(size: 26, weight: .medium, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+                    .frame(height: 60)
+            }
         }
-        .opacity(isPaused ? 0.5 : 1)
-        .font(.callout.weight(isUrgent ? .bold : .regular))
-        .foregroundStyle(isUrgent ? Theme.urgent : Theme.textPrimary)
-        .accessibilityLabel("\(seconds) seconds remaining")
+        .opacity(model.isPaused ? 0.4 : 1)
+        // One second per step, linear, so the bar glides rather than ticks.
+        .animation(reduceMotion ? nil : .linear(duration: 1), value: remaining)
+        .animation(.snappy, value: model.isPaused)
+        .padding(.horizontal, 40)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity)
+        .background(Theme.surface)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(remaining.map { "\($0) seconds remaining" } ?? "Untimed round")
     }
 }
 
@@ -187,7 +222,7 @@ private struct WordBoard: View {
             .padding(.vertical, 18)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 }
 

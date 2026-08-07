@@ -18,7 +18,7 @@ import Foundation
 final class SoundEngine {
     enum Cue {
         case tile          // a letter staged
-        case word(length: Int)
+        case word
         case bingo
         case reject
         case twist
@@ -114,7 +114,7 @@ final class SoundEngine {
     private func key(for cue: Cue) -> String {
         switch cue {
         case .tile: "tile"
-        case .word(let length): "word\(min(max(length, 3), 7))"
+        case .word: "word"
         case .bingo: "bingo"
         case .reject: "reject"
         case .twist: "twist"
@@ -128,14 +128,17 @@ final class SoundEngine {
         // high, almost-subliminal tick.
         buffers["tile"] = render(notes: [Note(frequency: 1174.66, start: 0, duration: 0.09, gain: 0.10)])
 
-        // Longer words climb the scale. Finding a five-letter word should feel better than a
-        // three, before you even look at the score.
-        for length in 3...7 {
-            let degree = min(length - 3, Self.scale.count - 1)
-            buffers["word\(length)"] = render(notes: [
-                Note(frequency: Self.scale[degree], start: 0, duration: 0.45, gain: 0.5)
-            ])
-        }
+        // One tone for a good word, whatever its length.
+        //
+        // This used to climb the scale with word length, which sounded expressive and was a
+        // mistake: every one of those five pitches meant the same thing — correct — so the
+        // variation carried nothing you could act on. What it did do was make the sound
+        // ambiguous enough that you looked at the screen to check, which is exactly what an
+        // audio cue exists to save you from. One tone up here, one low tone for a rejection,
+        // and you never have to look.
+        buffers["word"] = render(notes: [
+            Note(frequency: Self.scale[3], start: 0, duration: 0.45, gain: 0.5)
+        ])
 
         // The full-rack word: a rising three-note figure, the one genuinely celebratory sound.
         buffers["bingo"] = render(notes: [

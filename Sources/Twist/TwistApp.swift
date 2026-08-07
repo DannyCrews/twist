@@ -21,7 +21,7 @@ struct TwistApp: App {
     var body: some Scene {
         WindowGroup("Twist") {
             RootView(app: app)
-                .frame(minWidth: 760, minHeight: 780)
+                .frame(minWidth: 760, minHeight: 860)
                 .tint(Theme.accent)
                 .preferredColorScheme(appearance.colorScheme)
         }
