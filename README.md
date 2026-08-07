@@ -1,29 +1,45 @@
 # Twist
 
-A word game for macOS in the shape of the old Text Twist: six or seven scrambled letters, two
-minutes, and every word you can find in them. Find one that uses every letter and you move on.
+**A word game for macOS.** Six or seven scrambled letters, two minutes, and every word you can
+find in them. Find one that uses all the letters and you move on to the next rack.
 
-It keeps score across sittings, shows you the words you missed, and — unlike the 2001 original —
-tells you nothing you can't act on.
+It keeps score across sittings, shows you the words you missed, and tells you what each of them
+means.
 
 <p align="center">
-  <img src="docs/start-dark.png" alt="The start screen: clock and letter-count choices above a Start Game button" width="720">
-  <img src="docs/game-dark.png" alt="A round in progress: the board shows a slot for every word in the rack, filled in as you find them" width="720">
+  <img src="docs/game-dark.png" alt="A round in progress" width="760">
 </p>
 
 ---
 
-## Install
+## Contents
 
-**macOS 15 (Sequoia) or later. Apple Silicon.**
+1. [Installing](#installing)
+2. [Starting a game](#starting-a-game)
+3. [Playing a round](#playing-a-round)
+4. [Keyboard reference](#keyboard-reference)
+5. [Pausing](#pausing)
+6. [When the round ends](#when-the-round-ends)
+7. [Looking up a word](#looking-up-a-word)
+8. [Statistics](#statistics)
+9. [Sound and appearance](#sound-and-appearance)
+10. [Troubleshooting](#troubleshooting)
+11. [About the words](#about-the-words)
 
-### Build it yourself — the easy path
+---
 
-This is genuinely the least friction, because an app you build locally isn't quarantined and
-macOS opens it without complaint.
+## Installing
 
-You need Apple's Command Line Tools, which most Macs already have. If not, `xcode-select
---install` fetches them (~1 GB, a few minutes). **Full Xcode is not required.**
+**Requires macOS 15 (Sequoia) or later, on Apple Silicon.**
+
+### The easy way — build it yourself
+
+This sounds harder than it is, and it is genuinely the least friction: an app you build on your
+own Mac isn't quarantined, so it opens without macOS complaining at you.
+
+You need Apple's **Command Line Tools**. Most Macs already have them; if not, run
+`xcode-select --install` first and let it finish (about 1 GB, a few minutes). **Full Xcode is
+not required.**
 
 ```bash
 git clone https://github.com/DannyCrews/twist.git
@@ -32,17 +48,17 @@ make app
 open build/Twist.app
 ```
 
-That's it. Drag `build/Twist.app` to your Applications folder if you want to keep it.
+Drag `build/Twist.app` into your Applications folder to keep it.
 
 ### If someone sent you the app
 
-macOS will refuse to open it, and the message it shows ("damaged", or "cannot be opened") is
-misleading — it means *unsigned*, not broken. Signing an app so it opens cleanly on someone
-else's Mac requires a paid Apple Developer account, which this project doesn't have.
+macOS will refuse to open it, and the message it shows — "damaged", or "cannot be opened" — is
+misleading. It means *unsigned*, not broken. Making an app open cleanly on someone else's Mac
+requires a paid Apple Developer account, which this project doesn't have.
 
 To open it anyway:
 
-1. Move `Twist.app` to your Applications folder.
+1. Move **Twist.app** to your Applications folder.
 2. Double-click it. macOS blocks it. Dismiss the dialog.
 3. Open **System Settings → Privacy & Security**.
 4. Scroll to the bottom. There's a line about Twist being blocked, and an **Open Anyway** button.
@@ -50,23 +66,107 @@ To open it anyway:
 
 You only do this once.
 
-> On macOS 14 (Sonoma) and earlier this was a Control-click → Open on the app itself. Apple
+> On macOS 14 (Sonoma) and earlier this was a Control-click → **Open** on the app itself. Apple
 > removed that shortcut in Sequoia, which is why it's now a trip through Settings.
 
 ---
 
-## Playing
+## Starting a game
 
-It opens on a menu rather than a running clock. Two choices there:
+Twist opens on a menu rather than dropping you straight into a running clock.
+
+<p align="center">
+  <img src="docs/start-dark.png" alt="The start screen, with clock and letter-count choices above a Start Game button" width="620">
+</p>
+
+Two choices, both remembered between launches:
+
+| Setting | Option | |
+|---|---|---|
+| **Clock** | **2:00** | The original's two minutes per rack. |
+| | **Untimed** | No clock at all. Rounds end when you press **End Round**. |
+| **Letters** | **6** | Six-letter racks only. |
+| | **7** | Seven-letter racks only — more words, more room to work. |
+| | **Both** | Mixed at random. |
+
+Press **Start Game**, or just hit **Return**.
+
+Once you've finished a game, your best score, games played, and daily streak appear under the
+button.
+
+---
+
+## Playing a round
+
+### The clock
+
+Large, centred, above the board — with a bar beneath it that empties as the time goes. The bar
+is the point: you can feel time running down without reading the numbers. At fifteen seconds it
+turns a warm colour. There is no ticking.
+
+Untimed games show **∞ Untimed** here instead.
+
+### The board
+
+Everything above the divider is the board: **one slot for every word your rack spells**, grouped
+by length, longest group first.
+
+- A slot you haven't found shows **dots** — one per letter — so you always know how many words
+  remain and how long they are.
+- A slot you *have* found shows the word in purple.
+- Found words move to the **front of their group**, so your progress in each length reads at a
+  glance.
+- A word with a **purple outline** is a **bonus word**: one that was never on the board. Play a
+  word the game accepts but didn't list, and it appears, outlined, and scores.
+
+### The rack and the input line
+
+Below the divider are two rows. The upper row is the **word you're building**; the lower row is
+your **rack**.
+
+- **Type** a letter and it lifts out of the rack into your word.
+- **Click** a rack tile to do the same thing.
+- **Click a letter in the word you're building** to send it back — including one in the middle.
+- **Delete** takes back the last letter; **Escape** clears the line.
+
+### Twist and Enter
+
+**Twist** shuffles the letters still in your rack. It's the one hint the game offers, and seeing
+the same letters in a new order is often all it takes.
+
+**Twist keeps the word you're building.** Letters you've already used stay put; only the ones
+left in the rack move, and they pack to the left so the gaps sit at the end.
+
+**Enter** submits the word. So does the **Return** key.
+
+### Scoring
+
+Words score **ten points per letter squared**:
+
+| Letters | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|
+| **Points** | 90 | 160 | 250 | 360 | 490 |
+
+**Clearing the whole board doubles the round**, so finding every word is worth chasing.
+
+To advance to the next rack you must find the word that uses **every letter**. Without it, the
+game ends when the clock does.
+
+### Sounds
 
 | | |
 |---|---|
-| **Clock** | **2:00** — the original's two minutes · **Untimed** — rounds end when you say so |
-| **Letters** | **6** · **7** · **Both**, mixed at random |
+| **A chime** | The word was accepted. |
+| **A soft gong** | It wasn't. Deliberately gentle — a word game refuses you often enough. |
+| **Three rising bells** | You found the word using every letter. |
+| **A warm chord** | You cleared the whole board. |
+| **One soft note** | Ten seconds left. Never a ticking clock. |
 
-Both are remembered between launches.
+You never have to look at the screen to know whether a word was accepted.
 
-Then type. Letters lift out of the rack as you use them.
+---
+
+## Keyboard reference
 
 | Key | Does |
 |---|---|
@@ -76,202 +176,156 @@ Then type. Letters lift out of the rack as you use them.
 | **Escape** | Clear the line |
 | **Space** | Twist — shuffle the rack |
 | **⌘P** | Pause / resume |
-| **⌘N** | New game |
+| **⌘N** | New game — back to the menu |
 | **⇧⌘T** | Statistics |
 
-You can click the tiles instead of typing, if you'd rather. **Pause** and **Stats** are buttons
-in the top bar as well as shortcuts, and **Twist** and **Enter** sit directly under the rack —
-offset slightly right, because the input line fills left-to-right, so that is where your hand
-already is when a word is finished. Sound and light/dark are toggles along the bottom.
+---
 
-Pausing stops the clock and hides *both* the board and the rack — otherwise pausing would just
-be unlimited time to work out the anagram. Opening the stats screen pauses too, so checking your
-streak never costs you the round.
+## Pausing
 
-The board shows a slot for every word in the rack, grouped by length, so you always know what's
-left to find. Words score ten points per letter squared — 90 for a three, 490 for a seven — and
-clearing the whole board doubles the round.
+Press **⌘P**, or the **Pause** button in the top bar.
 
 <p align="center">
-  <img src="docs/review-light.png" alt="Between rounds: the words you missed, longest first" width="480">
-  <img src="docs/stats-dark.png" alt="Lifetime statistics with recent games" width="440">
+  <img src="docs/paused-dark.png" alt="The paused screen: the board and the rack are both hidden" width="620">
 </p>
+
+The clock stops, and **both the board and the rack are hidden**. That's deliberate — otherwise
+pausing would just be unlimited time to work out the anagram.
+
+Opening the statistics screen pauses too, so checking your streak never costs you the round.
 
 ---
 
-## What's different from the original
+## When the round ends
 
-**It tells you what you missed, and what those words mean.** The original told you only that
-you'd failed. Every round ends with the words that were on the board, longest first — and
-clicking one shows its definition, read from your Mac's own dictionary. That's what turns it
-from a test into something you get better at.
+A round ends when the clock runs out, when you press **Give Up**, or — in untimed games — when
+you press **End Round**.
 
 <p align="center">
-  <img src="docs/definition-dark.png" alt="A definition bubble for a missed word" width="320">
+  <img src="docs/review-dark.png" alt="The review screen listing the words you missed, longest first" width="620">
 </p>
 
-**The word list won't taunt you.** Word games built on a Scrabble dictionary expect you to find
-words nobody knows. Here, everything in the dictionary *scores* — if you know `aalii`, take the
-points — but only reasonably common words count toward the round's target, so "find them all"
-stays winnable.
+You then see **every word that was on the board and you didn't find**, longest first. This is
+the part the 2001 original never did: it told you only that you'd failed.
 
-**It remembers.** Scores, streaks, best-per-rack-size, and the last few games.
-
-**You can pause.** The original couldn't. Pausing hides the board *and* the rack, so it isn't
-a way to study the anagram with the clock stopped.
-
-**It sounds calm.** Every tone is synthesized from a single pentatonic scale, so nothing ever
-clashes. A word you got wrong is a soft low note, not a buzzer. The ten-second warning is one
-tone, not a ticking clock.
-
-**It looks calm too.** Deep plum rather than black, soft lavender rather than white — a flat
-white field behind a running clock is tiring. It opens dark; **View → Appearance** switches to
-light or follows the system. Both schemes are checked against WCAG contrast ratios: body text
-clears 12:1, and the tightest pair measures 4.8:1 against a 4.5 floor.
-
-<p align="center">
-  <img src="docs/game-light.png" alt="The same board in the light appearance" width="720">
-</p>
+- **Next Round** continues the game — offered only if you found the word using every letter.
+- **New Game** returns to the menu.
 
 ---
 
-## Building and hacking
+## Looking up a word
 
-```bash
-make test        # 88 unit tests — the fast inner loop
-make check       # tests + full pass over the shipped word list + every screen renders
-make dict        # rebuild the word list from source data
-make app         # assemble build/Twist.app
-make run         # run without bundling
-make snapshots   # render every screen to PNG, light and dark
-make sounds      # export every audio cue to WAV
-```
+**Click any word on the review screen** to see what it means.
 
-**Use `make test`, not `swift test`.** The Command Line Tools ship swift-testing outside the
-toolchain, and without the search paths the Makefile adds, SwiftPM's generated test runner
-compiles its own body away and exits 0 having run nothing at all. `swift test` now fails loudly
-instead of passing silently; the Makefile explains the mechanism at the top.
+<p align="center">
+  <img src="docs/definition-dark.png" alt="A definition bubble showing the headword, its part of speech, and its meaning" width="360">
+</p>
 
-| Path | What it is |
+The bubble gives the headword, its part of speech, and the first sense. Click elsewhere to
+dismiss it.
+
+When the entry found isn't quite the word you played — looking up `CANOES` finds `canoe` — the
+bubble says so, rather than looking like it fetched the wrong thing.
+
+Definitions come from **the dictionary already on your Mac** (New Oxford American, on a US
+English system). Nothing is downloaded and nothing is sent anywhere. A word with no entry simply
+isn't clickable.
+
+---
+
+## Statistics
+
+Press **⇧⌘T**, or the **Stats** button in the top bar. It's on the start menu too.
+
+<p align="center">
+  <img src="docs/stats-dark.png" alt="The statistics screen" width="560">
+</p>
+
+| | |
 |---|---|
-| `Sources/TwistKit/` | Every rule, with no UI imports — signatures, lexicon, round state machine, scoring, statistics |
-| `Sources/Twist/` | The SwiftUI app |
-| `Sources/dicttool/` | Offline pipeline that builds and verifies the shipped word list |
-| `Tests/TwistKitTests/` | 54 tests over the rules — no UI, no I/O |
-| `Tests/TwistAppTests/` | 34 tests over the app layer, definitions, and the shipped word list |
+| **Games** | Games finished. |
+| **Best** / **Average** | Highest and mean score. |
+| **Words** | Total words found, across every game. |
+| **Streak** / **Longest** | Consecutive days played. Several games in one day count as one day. |
+| **Best on 6** / **Best on 7** | Your best at each rack size, tracked separately. |
 
-There is no Xcode project, and no dependency on Xcode. Everything builds with SwiftPM against
-the Command Line Tools SDK.
+**Recent games** lists the last several sittings with their date, rounds cleared, and score.
 
-### The word list
+### Resetting
 
-`dicttool` merges three public datasets into one 386 kB file that loads in about 44 ms:
-
-- **[ENABLE](https://github.com/dolph/dictionary)** — Alan Beale's Enhanced North American
-  Benchmark Lexicon, public domain, 172,823 words. This is the accept list.
-- **[SUBTLEX-US](https://github.com/words/subtlex-word-frequencies)** — word counts from a
-  corpus of film subtitles. These decide which words are common enough to be part of a round's
-  target.
-
-- **[WordNet 3.1](https://wordnet.princeton.edu/license-and-commercial-use)** — Princeton's
-  lexical database, used at build time only as a membership oracle. None of it ships.
-
-SUBTLEX counts are folded case-insensitively. They used to be dropped when capitalized, because
-SUBTLEX capitalizes a word that usually appears capitalized and folding them in made `mae`,
-`mel` and `nam` count as ordinary words. That cost 4,251 real words: `saint` scored zero because
-`Saint` carries all 914 of its occurrences, and so did `china`, `abbey`, `acme` and `bill`.
-
-Two signals now decide a board target, because neither works alone. **Real lowercase usage**
-covers the closed-class words WordNet omits on principle — requiring WordNet by itself dropped
-`and`, `that`, `with`, `these` and `among` from the board. **WordNet** covers the words SUBTLEX
-only ever sees capitalized, and excludes `mae`, `nam` and `mel`, which are just as capitalized
-but are not words.
-
-A word survives the cull if WordNet knows it **or** it clears a frequency floor. That drops
-13,550 entries — `aal`, `abaka`, `abaxile`, `abmhos`, `abomasa` — the Scrabble-dictionary
-detritus that scores points nobody can look up, while keeping `bro`, `carbs` and `carpool`,
-which are real but too modern for a 1990s lexical database.
-
-A third source is a blocklist. ENABLE contains ethnic slurs, and the game was dealing them as
-words it asked you to find — a probe of 27 offensive terms found 16 of them on the board. The
-[LDNOOBW list](https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words)
-(CC BY 4.0) is fetched for the profanity half; it is a profanity list rather than a slur list
-and covered only 5 of the 16, so `Sources/dicttool/blocklist.txt` carries the rest. Blocked
-words are removed outright, not merely demoted, so none of them scores either.
-
-No corpus statistic identifies these words — not frequency, not length. A curated list is the
-mechanism, and it is necessarily incomplete; the file is grouped and commented so it is easy to
-extend or to argue with. Words that are offensive in one sense and ordinary in another
-(`cripple`, `queer`, `dyke`, `lame`) are deliberately kept, and listed in the file's comments
-so that choice is visible rather than silent.
-
-A fourth filter is `undefined.txt`: words that appear in no dictionary installed on the
-machine. A word no established dictionary defines is one nobody will miss, and one the
-definition bubble could never explain. It removes 60 board targets — almost all surnames
-(`granger`, `hatcher`, `silva`, `davies`) that reached the board through obscure WordNet senses
-— and ~3,900 rare entries like `abfarad`, `abohm` and `abvolt`.
-
-That list is generated by `dicttool undefined` and **committed**, not consulted during every
-build, so `dicttool build` produces the same lexicon on any Mac. The system dictionary decides
-once, a human reviews the diff, and the build stays reproducible from files in the repository.
-
-The result is 34,161 playable words, 13,735 of them common, and 6,355 racks sorted into four
-difficulty tiers, with 119 blocked and 17,572 culled.
-
-```bash
-swift run dicttool sample    # print racks with their solutions, to judge how they play
-swift run dicttool verify    # assert the invariants the game depends on
-swift run dicttool stats     # the distributions behind the tuning constants
-swift run dicttool undefined # regenerate the committed no-dictionary-entry list (slow)
-```
-
-Every tuning constant lives in one place: `Sources/dicttool/Build.swift`.
-
-### What the tests cover
-
-Three layers, because they fail in different ways.
-
-**Rules** (`TwistKitTests`) — signatures, the lexicon, the round state machine, scoring,
-statistics. Pure functions and value types, so these are fast and deterministic.
-
-**The app layer** (`TwistAppTests`) — staging and unstaging letters, twisting while a word is
-part-typed, pause blocking input, the sound preference persisting, resetting history. This
-layer had no tests for most of the project's life and is where nearly every shipped bug lived:
-a mute toggle that muted without redrawing, staged letters that could not be clicked back, a
-twist that discarded the word in progress. None of them were rule bugs, so none of them were
-visible to the layer above.
-
-**The shipped data** (`ShippedLexiconTests`) — that the word list loads, that every sampled rack
-has a findable common bingo word, that recorded targets match what the lexicon yields, and that
-no blocked word survived the build. That last one exists because the worst defect in this
-project was the board dealing ethnic slurs as words to find, and the rules were working
-perfectly the whole time. `make check` adds the exhaustive pass over all 6,073 racks via
-`dicttool verify`.
-
-`make check` also re-renders every screen and asserts each one has content, because
-`ImageRenderer` returns a blank image for a `ScrollView` rather than failing — a real trap here
-more than once.
-
-### Verifying the interface
-
-`make snapshots` renders every screen to PNG in light and dark **without a display**, and
-`make sounds` writes every cue to WAV with its peak level and duration. Both run headless, which
-means the look and the sound design can be checked in a build rather than by eye and ear.
-
-One gotcha worth knowing if you extend the UI: `ImageRenderer` produces nothing at all for a
-`ScrollView`. That's why the board doesn't scroll and why `ScrollIfNeeded` exists — without it,
-snapshots come back showing empty screens that look fine.
+**Reset…** clears everything. It asks first, naming how many games it is about to delete,
+because the history is the one thing in Twist you can't recreate by playing again.
 
 ---
 
-## Credits and licensing
+## Sound and appearance
 
-Text Twist was made by GameHouse, a RealNetworks studio, and released in 2001. This is not their
-code — none of it was ever published, and nothing here derives from it. **"TextTwist" is a
-RealNetworks trademark**, which is why this is called something else.
+Two buttons sit at the bottom right of the play screen.
 
-The bundled word list is built from ENABLE (public domain) and SUBTLEX-US (an academic corpus,
-free for research use). If you plan to distribute this commercially, check the SUBTLEX terms
-first — the frequency data is the part with strings attached, not the words themselves.
+| | |
+|---|---|
+| **Speaker** | Sound on or off. Remembered between launches. |
+| **Sun / moon** | Light or dark. Twist opens dark — a flat white field behind a running clock is tiring. |
+
+For a three-way choice including *follow the system*, use **View → Appearance** in the menu bar.
+
+Both appearances are checked against WCAG contrast ratios: body text clears 12:1, and the
+tightest pairing measures 4.8:1 against a 4.5 floor.
+
+---
+
+## Troubleshooting
+
+**"Twist.app is damaged and can't be opened."**
+It isn't damaged, it's unsigned. See [If someone sent you the app](#if-someone-sent-you-the-app).
+
+**Nothing happens when I click a word on the review screen.**
+That word has no entry in your Mac's dictionary, so there's nothing to show. Words that do have
+one respond to a click and show a pointing-hand cursor.
+
+**No definitions appear at all.**
+Open **Dictionary.app** and check a dictionary is enabled under **Dictionary → Settings**. Twist
+reads whatever you have installed; it doesn't ship its own.
+
+**A word I know was refused.**
+Twist accepts about 34,000 words, and everything it accepts can be found in a dictionary — that
+is the rule the word list is built on. Scrabble-only curiosities like `abfarad` and `abvolt`
+aren't included.
+
+**The board scrolls during a round.**
+Seven-letter racks can spell more words than fit on screen. Making the window taller stops it.
+
+**Where is my data?**
+Scores live in `~/Library/Application Support/Twist/history.json`. Preferences are ordinary
+macOS defaults. Nothing leaves your Mac.
+
+---
+
+## About the words
+
+Twist accepts **34,161 words**, of which **13,735** are common enough to appear on the board as
+targets. The rest still score when you find them — they show up as outlined bonus words.
+
+The list is built from [ENABLE](https://github.com/dolph/dictionary) (a public-domain word
+list), [SUBTLEX-US](https://github.com/words/subtlex-word-frequencies) (word frequencies from
+film subtitles), and [WordNet](https://wordnet.princeton.edu/license-and-commercial-use)
+(Princeton's lexical database).
+
+Two rules shape it:
+
+**Everything it accepts can be looked up.** A word no established dictionary defines is one
+nobody will miss — and one the definition bubble could never explain.
+
+**Slurs are removed outright.** ENABLE contains ethnic slurs, and an unfiltered word game will
+put them on the board as words to go and find. They're excluded from the list entirely, so they
+never appear and never score.
+
+---
+
+Text Twist was made by GameHouse, a RealNetworks studio, in 2001. This is not their code — none
+of it was ever published, and nothing here derives from it. **"TextTwist" is a RealNetworks
+trademark**, which is why this is called something else.
+
+Building, testing, and how the word list is made: **[DEVELOPING.md](DEVELOPING.md)**.
 
 No licence file yet. Ask before reusing.
