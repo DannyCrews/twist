@@ -16,7 +16,10 @@ struct ShippedLexicon {
 
 @Test func theBundledLexiconLoads() {
     let lexicon = ShippedLexicon.lexicon
-    #expect(lexicon.wordCount > 40_000)
+    // 38,183 after the cull, down from 51,733: words WordNet does not know and speech barely
+    // uses are gone. The floor is well below that so ordinary tuning does not trip it, but high
+    // enough to catch a build that silently produced almost nothing.
+    #expect(lexicon.wordCount > 30_000)
     #expect(lexicon.puzzles.count > 4_000)
     for size in [6, 7] {
         #expect(!lexicon.puzzles(rackSize: size).isEmpty, "no \(size)-letter racks")

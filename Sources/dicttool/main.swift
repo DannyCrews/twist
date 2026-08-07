@@ -21,7 +21,9 @@ func build() async throws {
     async let subtlex = loadFrequencies()
     let (words, frequencies) = try await (enable, subtlex)
     let blocked = try await loadBlocklist()
-    let result = buildLexicon(words: words, frequencies: frequencies, blocked: blocked)
+    let wordNet = try await WordNet.load()
+    let result = buildLexicon(
+        words: words, frequencies: frequencies, blocked: blocked, wordNet: wordNet)
 
     let text = LexiconFile.encode(entries: result.entries, puzzles: result.puzzles)
     try FileManager.default.createDirectory(
@@ -43,6 +45,7 @@ func build() async throws {
     }
     print("""
           blocked   \(result.blockedWords.formatted()) words removed by the blocklist
+          culled    \(result.culledWords.formatted()) words unknown to WordNet and rare in speech
           rejected  \(result.skippedUncommonBingo.formatted()) racks with no common bingo word
                     \(result.skippedBands.values.reduce(0, +).formatted()) racks outside the \
         \(Tuning.commonWordBand.lowerBound)–\(Tuning.commonWordBand.upperBound) common-word band
@@ -58,12 +61,12 @@ func stats() async throws {
     async let subtlex = loadFrequencies()
     let (words, frequencies) = try await (enable, subtlex)
 
-    print("ENABLE: \(words.count.formatted()) words, SUBTLEX: \(frequencies.count.formatted()) entries")
+    print("ENABLE: \(words.count.formatted()) words, SUBTLEX: \(frequencies.folded.count.formatted()) entries")
 
     print("\ncommon-word count by SUBTLEX threshold (ENABLE words of 3–7 letters):")
     let playable = words.filter { Tuning.wordLengths.contains($0.count) }
     for threshold in [1, 5, 10, 20, 50, 100, 500] {
-        let kept = playable.count { (frequencies[$0] ?? 0) >= threshold }
+        let kept = playable.count { frequencies.count($0) >= threshold }
         let share = Double(kept) / Double(playable.count) * 100
         print("  >= \(threshold, format: 4): \(kept, format: 7) of \(playable.count.formatted()) (\(share.formatted(.number.precision(.fractionLength(1))))%)")
     }

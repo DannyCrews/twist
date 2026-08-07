@@ -62,25 +62,47 @@ func loadEnable() async throws -> [String] {
     return text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
 }
 
-/// SUBTLEX counts for lowercase words only.
+/// SUBTLEX counts, folded case-insensitively.
 ///
-/// SUBTLEX capitalizes an entry when the word appears capitalized more often than not, which
-/// is its way of marking proper nouns. Folding those in by lowercasing lets `Mae`, `Mel` and
-/// `Nam` count as common English words — sampled racks offered exactly that — so capitalized
-/// entries are dropped instead. Nothing playable is lost: the only common word that is always
-/// capitalized is `I`, which is below the three-letter floor.
-func loadFrequencies() async throws -> [String: Int] {
+/// SUBTLEX capitalises an entry when the word appears capitalised more often than not, which is
+/// its way of marking proper nouns. This used to drop those entries wholesale, which kept `mae`,
+/// `mel` and `nam` off the board but took 4,251 ordinary words with them: `saint` scored 0
+/// because `Saint` carries all 914 of its occurrences, and so did `china`, `abbey`, `acme`,
+/// `adobe`, `aegis`, `mark` and `bill`.
+///
+/// Folding is safe now that WordNet decides which words may be targets. A proper noun has no
+/// lowercase WordNet lemma, so `mae` and `nam` are excluded on that evidence instead of by
+/// throwing away every capitalised count.
+func loadFrequencies() async throws -> Frequencies {
     struct Entry: Decodable {
         let word: String
         let count: Int
     }
     let data = try await Input.subtlex.load()
     let entries = try JSONDecoder().decode([Entry].self, from: data)
-    return entries.reduce(into: [:]) { totals, entry in
-        guard let first = entry.word.unicodeScalars.first, !CharacterSet.uppercaseLetters.contains(first)
-        else { return }
-        totals[entry.word, default: 0] += entry.count
+
+    var folded: [String: Int] = [:]
+    var lowercase: [String: Int] = [:]
+    for entry in entries {
+        let word = entry.word.lowercased()
+        folded[word, default: 0] += entry.count
+        if entry.word == word { lowercase[word, default: 0] += entry.count }
     }
+    return Frequencies(folded: folded, lowercase: lowercase)
+}
+
+/// SUBTLEX counts kept two ways, because the difference between them is the signal.
+///
+/// A word stored lowercase is used lowercase — that is what `and`, `that` and `with` look like.
+/// A word SUBTLEX stores only capitalised has zero lowercase count, and covers two very
+/// different cases: ordinary words that usually begin a proper name (`saint`, `china`, `mark`,
+/// `bill`) and actual proper nouns (`mae`, `nam`, `mel`). WordNet separates those two.
+struct Frequencies {
+    let folded: [String: Int]
+    let lowercase: [String: Int]
+
+    func count(_ word: String) -> Int { folded[word] ?? 0 }
+    func lowercaseCount(_ word: String) -> Int { lowercase[word] ?? 0 }
 }
 
 

@@ -39,6 +39,19 @@ enum Snapshot {
         }
     }
 
+    /// Definitions for the review snapshot. A stub, so the image is identical on every machine —
+    /// the real provider reads whichever dictionaries that Mac happens to have installed.
+    private static let snapshotDefinitions = StubDefinitionProvider(
+        entries: Dictionary(
+            uniqueKeysWithValues: [
+                ("canoes", "a narrow, keelless boat with pointed ends"),
+                ("oceans", "a very large expanse of sea"),
+                ("scone", "a small unsweetened or lightly sweetened biscuit-like cake"),
+                ("acne", "the occurrence of inflamed sebaceous glands in the skin"),
+                ("cones", "a solid or hollow object tapering to a point"),
+                ("ocean", "a very large expanse of sea"),
+            ].map { ($0.0, Definition(headword: $0.0, partOfSpeech: "noun", text: $0.1)) }))
+
     /// A throwaway preferences domain. Fixtures flip real settings, and those writes must not
     /// reach the player's own preferences.
     private static let scratchDefaults: UserDefaults = {
@@ -61,7 +74,9 @@ enum Snapshot {
                     scheme: scheme,
                     to: directory.appendingPathComponent("game-\(name).png"))
                 try write(
-                    ReviewView(model: reviewedModel(lexicon: lexicon)),
+                    ReviewView(
+                        model: reviewedModel(lexicon: lexicon),
+                        definitions: snapshotDefinitions),
                     size: CGSize(width: 520, height: 560),
                     scheme: scheme,
                     to: directory.appendingPathComponent("review-\(name).png"))
@@ -100,6 +115,18 @@ enum Snapshot {
                     size: CGSize(width: 460, height: 520),
                     scheme: scheme,
                     to: directory.appendingPathComponent("stats-\(name).png"))
+                // The popover itself renders in its own window, which ImageRenderer cannot
+                // capture, so the bubble is rendered directly.
+                try write(
+                    DefinitionBubble(
+                        definition: Definition(
+                            headword: "canoe", partOfSpeech: "noun",
+                            text: "a narrow, keelless boat with pointed ends, propelled by a "
+                                + "paddle or paddles"),
+                        lookedUp: "canoes"),
+                    size: CGSize(width: 300, height: 170),
+                    scheme: scheme,
+                    to: directory.appendingPathComponent("definition-\(name).png"))
                 try write(
                     GameOverView(model: finishedModel(lexicon: lexicon)),
                     size: CGSize(width: 480, height: 520),

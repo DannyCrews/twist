@@ -101,9 +101,14 @@ clearing the whole board doubles the round.
 
 ## What's different from the original
 
-**It tells you what you missed.** The original told you only that you'd failed. Every round ends
-with the words that were on the board, longest first. That's what turns it from a test into
-something you get better at.
+**It tells you what you missed, and what those words mean.** The original told you only that
+you'd failed. Every round ends with the words that were on the board, longest first — and
+clicking one shows its definition, read from your Mac's own dictionary. That's what turns it
+from a test into something you get better at.
+
+<p align="center">
+  <img src="docs/definition-dark.png" alt="A definition bubble for a missed word" width="320">
+</p>
 
 **The word list won't taunt you.** Word games built on a Scrabble dictionary expect you to find
 words nobody knows. Here, everything in the dictionary *scores* — if you know `aalii`, take the
@@ -133,7 +138,7 @@ clears 12:1, and the tightest pair measures 4.8:1 against a 4.5 floor.
 ## Building and hacking
 
 ```bash
-make test        # 81 unit tests — the fast inner loop
+make test        # 87 unit tests — the fast inner loop
 make check       # tests + full pass over the shipped word list + every screen renders
 make dict        # rebuild the word list from source data
 make app         # assemble build/Twist.app
@@ -153,14 +158,14 @@ instead of passing silently; the Makefile explains the mechanism at the top.
 | `Sources/Twist/` | The SwiftUI app |
 | `Sources/dicttool/` | Offline pipeline that builds and verifies the shipped word list |
 | `Tests/TwistKitTests/` | 54 tests over the rules — no UI, no I/O |
-| `Tests/TwistAppTests/` | 27 tests over the app layer and the shipped word list |
+| `Tests/TwistAppTests/` | 33 tests over the app layer, definitions, and the shipped word list |
 
 There is no Xcode project, and no dependency on Xcode. Everything builds with SwiftPM against
 the Command Line Tools SDK.
 
 ### The word list
 
-`dicttool` merges two public datasets into one 546 kB file that loads in about 44 ms:
+`dicttool` merges three public datasets into one 422 kB file that loads in about 44 ms:
 
 - **[ENABLE](https://github.com/dolph/dictionary)** — Alan Beale's Enhanced North American
   Benchmark Lexicon, public domain, 172,823 words. This is the accept list.
@@ -168,9 +173,24 @@ the Command Line Tools SDK.
   corpus of film subtitles. These decide which words are common enough to be part of a round's
   target.
 
-Capitalized SUBTLEX entries are dropped rather than folded in. SUBTLEX capitalizes a word when
-it usually appears capitalized, which is how it marks proper nouns; lowercasing them made `mae`,
-`mel` and `nam` count as ordinary English words.
+- **[WordNet 3.1](https://wordnet.princeton.edu/license-and-commercial-use)** — Princeton's
+  lexical database, used at build time only as a membership oracle. None of it ships.
+
+SUBTLEX counts are folded case-insensitively. They used to be dropped when capitalized, because
+SUBTLEX capitalizes a word that usually appears capitalized and folding them in made `mae`,
+`mel` and `nam` count as ordinary words. That cost 4,251 real words: `saint` scored zero because
+`Saint` carries all 914 of its occurrences, and so did `china`, `abbey`, `acme` and `bill`.
+
+Two signals now decide a board target, because neither works alone. **Real lowercase usage**
+covers the closed-class words WordNet omits on principle — requiring WordNet by itself dropped
+`and`, `that`, `with`, `these` and `among` from the board. **WordNet** covers the words SUBTLEX
+only ever sees capitalized, and excludes `mae`, `nam` and `mel`, which are just as capitalized
+but are not words.
+
+A word survives the cull if WordNet knows it **or** it clears a frequency floor. That drops
+13,550 entries — `aal`, `abaka`, `abaxile`, `abmhos`, `abomasa` — the Scrabble-dictionary
+detritus that scores points nobody can look up, while keeping `bro`, `carbs` and `carpool`,
+which are real but too modern for a 1990s lexical database.
 
 A third source is a blocklist. ENABLE contains ethnic slurs, and the game was dealing them as
 words it asked you to find — a probe of 27 offensive terms found 16 of them on the board. The
@@ -185,8 +205,8 @@ extend or to argue with. Words that are offensive in one sense and ordinary in a
 (`cripple`, `queer`, `dyke`, `lame`) are deliberately kept, and listed in the file's comments
 so that choice is visible rather than silent.
 
-The result is 51,733 playable words, 12,174 of them common, and 6,073 racks sorted into four
-difficulty tiers, with 119 words blocked.
+The result is 38,183 playable words, 13,795 of them common, and 6,330 racks sorted into four
+difficulty tiers, with 119 blocked and 13,550 culled.
 
 ```bash
 swift run dicttool sample    # print racks with their solutions, to judge how they play

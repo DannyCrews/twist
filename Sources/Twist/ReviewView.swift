@@ -8,6 +8,11 @@ import TwistKit
 struct ReviewView: View {
     let model: GameModel
 
+    /// Injected so tests and snapshots do not depend on which dictionaries a machine has.
+    var definitions: DefinitionProvider = SystemDefinitionProvider()
+
+    @State private var shownWord: String?
+
     private var summary: RoundSummary? { model.reviewSummary }
 
     var body: some View {
@@ -67,11 +72,12 @@ struct ReviewView: View {
                 ScrollIfNeeded {
                     FlowLayout(spacing: 8, lineSpacing: 8) {
                         ForEach(summary.missedWords, id: \.self) { word in
-                            Text(word.uppercased())
-                                .font(.system(size: 14, weight: .medium, design: .monospaced))
-                                .padding(.vertical, 5)
-                                .padding(.horizontal, 8)
-                                .background(RoundedRectangle(cornerRadius: 6).fill(Theme.slot))
+                            MissedWord(
+                                word: word,
+                                definition: definitions.definition(for: word),
+                                isShowing: shownWord == word,
+                                show: { shownWord = shownWord == word ? nil : word },
+                                dismiss: { shownWord = nil })
                         }
                     }
                     .padding(.horizontal, 24)
@@ -127,5 +133,85 @@ private struct Stat: View {
                 .foregroundStyle(Theme.textSecondary)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+
+/// A word you did not find, with what it means a click away.
+///
+/// Click rather than hover: the grid holds up to 45 words, and a popover firing on every word
+/// the pointer crosses would be noise rather than help. Words with no definition available are
+/// still shown — they were still missed — but are not presented as something to click.
+private struct MissedWord: View {
+    let word: String
+    let definition: Definition?
+    let isShowing: Bool
+    let show: () -> Void
+    let dismiss: () -> Void
+
+    var body: some View {
+        Group {
+            if definition != nil {
+                Button(action: show) { chip }
+                    .buttonStyle(.plain)
+                    .pointerStyle(.link)
+                    .accessibilityHint("Show definition")
+            } else {
+                chip
+            }
+        }
+        .popover(isPresented: Binding(get: { isShowing }, set: { if !$0 { dismiss() } })) {
+            if let definition {
+                DefinitionBubble(definition: definition, lookedUp: word)
+            }
+        }
+    }
+
+    private var chip: some View {
+        Text(word.uppercased())
+            .font(.system(size: 14, weight: .medium, design: .monospaced))
+            .foregroundStyle(Theme.textPrimary)
+            .padding(.vertical, 5)
+            .padding(.horizontal, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isShowing ? Theme.accentSoft : Theme.slot))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(isShowing ? Theme.accent : .clear, lineWidth: 1))
+    }
+}
+
+struct DefinitionBubble: View {
+    let definition: Definition
+    let lookedUp: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(definition.headword)
+                    .font(.headline)
+                    .foregroundStyle(Theme.accent)
+                if let part = definition.partOfSpeech {
+                    Text(part)
+                        .font(.caption.italic())
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+            // Say so when the entry found is not the word played, rather than looking like the
+            // wrong definition was fetched.
+            if definition.headword.lowercased() != lookedUp.lowercased() {
+                Text("\(lookedUp.uppercased()) is a form of \(definition.headword)")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textFaint)
+            }
+            Text(definition.text)
+                .font(.callout)
+                .foregroundStyle(Theme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(width: 300, alignment: .leading)
+        .background(Theme.surface)
     }
 }
