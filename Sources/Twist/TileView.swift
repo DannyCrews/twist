@@ -29,7 +29,8 @@ struct TileView: View {
         }
     }
 
-    private var isInteractive: Bool { role == .rack && action != nil }
+    // A staged letter is as clickable as a rack tile: clicking it is how you take it back.
+    private var isInteractive: Bool { (role == .rack || role == .entry) && action != nil }
 
     var body: some View {
         let tile = RoundedRectangle(cornerRadius: 11, style: .continuous)
@@ -78,7 +79,8 @@ struct TileView: View {
         switch role {
         case .rack: AnyShapeStyle(isHovering ? Theme.tileHover : Theme.tile)
         case .staged: AnyShapeStyle(Theme.slot)
-        case .entry: AnyShapeStyle(Theme.accentSoft)
+        case .entry:
+            AnyShapeStyle(isHovering ? Theme.accent.opacity(0.34) : Theme.accentSoft)
         case .empty: AnyShapeStyle(Theme.slot)
         }
     }

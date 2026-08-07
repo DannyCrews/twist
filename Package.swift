@@ -12,7 +12,12 @@ let package = Package(
             dependencies: ["TwistKit"],
             resources: [.copy("Resources/lexicon.twist")]
         ),
-        .executableTarget(name: "dicttool", dependencies: ["TwistKit"]),
+        .executableTarget(
+            name: "dicttool",
+            dependencies: ["TwistKit"],
+            // Read from the working directory at build time, not bundled into the tool.
+            exclude: ["blocklist.txt"]
+        ),
         .testTarget(name: "TwistKitTests", dependencies: ["TwistKit"]),
     ]
 )

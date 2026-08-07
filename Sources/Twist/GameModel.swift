@@ -142,6 +142,17 @@ final class GameModel {
         sound.play(.tile)
     }
 
+    /// Returns one staged letter to the rack, by its position in the typed word.
+    ///
+    /// Backspace only ever removed the last letter, so fixing the first letter of a six-letter
+    /// word meant clearing the whole line and retyping it.
+    func unstage(at position: Int) {
+        guard !isPaused, typedTileIndices.indices.contains(position) else { return }
+        typedTileIndices.remove(at: position)
+        feedback = .none
+        sound.play(.tile)
+    }
+
     func backspace() {
         guard !typedTileIndices.isEmpty else { return }
         typedTileIndices.removeLast()

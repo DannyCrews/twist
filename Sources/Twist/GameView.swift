@@ -246,13 +246,12 @@ private struct PausedCurtain: View {
 
 private struct PlayArea: View {
     let model: GameModel
-    @Namespace private var tiles
 
     var body: some View {
         VStack(spacing: 14) {
             FeedbackLine(feedback: model.feedback)
-            InputLine(word: model.typedWord, rackSize: model.round.puzzle.rackSize, namespace: tiles)
-            Rack(model: model, namespace: tiles)
+            InputLine(model: model)
+            Rack(model: model)
             PrimaryActions(model: model)
             UtilityBar(model: model)
                 .padding(.top, 2)
@@ -287,30 +286,35 @@ private struct FeedbackLine: View {
 }
 
 private struct InputLine: View {
-    let word: String
-    let rackSize: Int
-    let namespace: Namespace.ID
+    let model: GameModel
+
+    private var letters: [Character] { Array(model.typedWord) }
 
     var body: some View {
         HStack(spacing: 7) {
-            ForEach(0..<rackSize, id: \.self) { index in
-                let letters = Array(word)
+            ForEach(0..<model.round.puzzle.rackSize, id: \.self) { index in
                 if index < letters.count {
-                    TileView(letter: letters[index], role: .entry)
-                        .matchedGeometryEffect(id: "entry-\(index)", in: namespace)
+                    TileView(
+                        letter: letters[index],
+                        role: .entry,
+                        action: { model.unstage(at: index) }
+                    )
+                    .accessibilityLabel("\(String(letters[index]).uppercased()), return to rack")
+                    .accessibilityAddTraits(.isButton)
                 } else {
                     TileView(letter: nil, role: .empty)
                 }
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(word.isEmpty ? "No letters entered" : "Entered \(word)")
+        // `.contain` rather than `.ignore`: each tile is a control now, so VoiceOver has to be
+        // able to reach it.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(model.typedWord.isEmpty ? "No letters entered" : "Entered word")
     }
 }
 
 private struct Rack: View {
     let model: GameModel
-    let namespace: Namespace.ID
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -340,13 +344,13 @@ private struct PrimaryActions: View {
 
     var body: some View {
         HStack(spacing: 12) {
+            Button("Twist") { model.twist() }
+                .buttonStyle(PrimaryButtonStyle())
+                .help("Shuffle the rack (Space)")
             Button("Enter") { model.submit() }
                 .buttonStyle(PrimaryButtonStyle(isProminent: true))
                 .keyboardShortcut(.defaultAction)
                 .help("Submit the word (Return)")
-            Button("Twist") { model.twist() }
-                .buttonStyle(PrimaryButtonStyle())
-                .help("Shuffle the rack (Space)")
         }
         .pointerStyle(.link)
     }

@@ -66,6 +66,11 @@ enum Snapshot {
                     scheme: scheme,
                     to: directory.appendingPathComponent("review-\(name).png"))
                 try write(
+                    GameView(model: unstagedModel(lexicon: lexicon)),
+                    size: CGSize(width: 760, height: 780),
+                    scheme: scheme,
+                    to: directory.appendingPathComponent("unstage-\(name).png"))
+                try write(
                     GameView(model: untimedModel(lexicon: lexicon)),
                     size: CGSize(width: 760, height: 780),
                     scheme: scheme,
@@ -137,6 +142,19 @@ enum Snapshot {
             defaults: scratchDefaults)
         play(model.round.solutions.filter { $0.word.count == 3 }.prefix(2).map(\.word), on: model)
         model.endRound()
+        return model
+    }
+
+    /// Three letters staged, then the middle one clicked to send it back.
+    ///
+    /// Clicking a staged letter did nothing at all — only Delete removed one, and only from the
+    /// end. The image is the evidence: the input line should show two letters, and the rack
+    /// should have the returned one available again rather than greyed out.
+    private static func unstagedModel(lexicon: Lexicon) -> GameModel {
+        let model = playedModel(lexicon: lexicon)
+        model.clear()
+        for character in model.round.tiles.prefix(3) { model.type(character) }
+        model.unstage(at: 1)
         return model
     }
 
