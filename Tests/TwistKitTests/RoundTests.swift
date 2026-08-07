@@ -142,3 +142,31 @@ private func makeRound() -> Round {
     #expect(Scoring.points(forWordOfLength: 7) == 490)
     #expect(Scoring.points(forWordOfLength: 2) == 0)
 }
+
+@Test func foundWordsLeadTheirGroupInDiscoveryOrder() {
+    var round = makeRound()
+    // Board starts fully unfound: plain alphabetical within each length group.
+    let fiveLetters = { round.commonWordsByLength.first { $0.length == 5 }?.words.map(\.word) }
+    #expect(fiveLetters() == ["steam", "tears"])
+
+    // "tears" is alphabetically second but found first, so it leads.
+    round.submit("tears")
+    #expect(fiveLetters() == ["tears", "steam"])
+
+    // Finding the other one appends it; the first never moves again.
+    round.submit("steam")
+    #expect(fiveLetters() == ["tears", "steam"])
+}
+
+@Test func orderingNeverAddsOrLosesWords() {
+    var round = makeRound()
+    let before = Set(round.commonWordsByLength.flatMap { $0.words.map(\.word) })
+    for word in ["sea", "stream", "tears"] { round.submit(word) }
+    let after = round.commonWordsByLength
+    #expect(Set(after.flatMap { $0.words.map(\.word) }) == before)
+    // Groups stay longest-first, and each group holds one length.
+    #expect(after.map(\.length) == after.map(\.length).sorted(by: >))
+    for group in after {
+        #expect(group.words.allSatisfy { $0.word.count == group.length })
+    }
+}
