@@ -99,7 +99,7 @@ struct StartView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.background)
         .sheet(isPresented: $showingStats) {
-            StatsView(history: app.history)
+            StatsView(history: app.history, onReset: { app.resetHistory() })
         }
     }
 

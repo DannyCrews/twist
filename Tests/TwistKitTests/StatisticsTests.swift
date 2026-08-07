@@ -154,3 +154,24 @@ private func record(
     #expect(record.wasTimed)
     #expect(record.score == session.bankedScore)
 }
+
+@Test func clearingRemovesTheHistoryFile() throws {
+    let url = FileManager.default.temporaryDirectory
+        .appendingPathComponent("twist-tests-\(UUID().uuidString)")
+        .appendingPathComponent("history.json")
+    defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+
+    let store = HistoryStore(fileURL: url)
+    try store.append(record(daysAgo: 0, score: 5000))
+    #expect(store.load().count == 1)
+
+    try store.clear()
+    #expect(store.load().isEmpty)
+    // Gone, not emptied — nothing left to half-read.
+    #expect(!FileManager.default.fileExists(atPath: url.path))
+
+    // Clearing an already-clear history is not an error, and a later game still records.
+    try store.clear()
+    try store.append(record(daysAgo: 0, score: 100))
+    #expect(store.load().count == 1)
+}

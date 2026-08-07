@@ -47,7 +47,7 @@ struct GameView: View {
             GameOverView(model: model, onQuit: onQuit)
         }
         .sheet(isPresented: $showingStats) {
-            StatsView(history: model.history)
+            StatsView(history: model.history, onReset: { model.resetHistory() })
         }
         .onReceive(NotificationCenter.default.publisher(for: .showStatistics)) { _ in
             // Pause here rather than at the button, so the menu item and the shortcut stop the

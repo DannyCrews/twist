@@ -49,7 +49,10 @@ struct GameOverView: View {
 /// Lifetime totals, reachable at any time from the menu.
 struct StatsView: View {
     let history: [GameRecord]
+    var onReset: (() -> Void)?
+
     @Environment(\.dismiss) private var dismiss
+    @State private var isConfirmingReset = false
 
     private var statistics: Statistics { Statistics(records: history) }
 
@@ -72,8 +75,27 @@ struct StatsView: View {
                 RecentGames(records: history)
             }
 
-            Button("Done") { dismiss() }
-                .keyboardShortcut(.defaultAction)
+            HStack {
+                if onReset != nil, !history.isEmpty {
+                    Button("Reset…", role: .destructive) { isConfirmingReset = true }
+                }
+                Spacer()
+                Button("Done") { dismiss() }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .confirmationDialog(
+            "^[Delete \(history.count) recorded game](inflect: true)?",
+            isPresented: $isConfirmingReset,
+            titleVisibility: .visible
+        ) {
+            Button("Delete Statistics", role: .destructive) {
+                onReset?()
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Scores, streaks and bests are erased. This cannot be undone.")
         }
         .padding(28)
         .foregroundStyle(Theme.textPrimary)

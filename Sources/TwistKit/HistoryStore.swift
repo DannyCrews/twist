@@ -43,6 +43,13 @@ public struct HistoryStore: Sendable {
         try data.write(to: fileURL, options: .atomic)
     }
 
+    /// Deletes the history file outright rather than writing an empty array, so a reset
+    /// leaves nothing behind to half-read later.
+    public func clear() throws {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
+        try FileManager.default.removeItem(at: fileURL)
+    }
+
     @discardableResult
     public func append(_ record: GameRecord) throws -> [GameRecord] {
         var records = load()

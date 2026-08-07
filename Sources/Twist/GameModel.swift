@@ -253,6 +253,13 @@ final class GameModel {
         startClock()
     }
 
+    /// Wipes every recorded game, including the sitting in progress once it is banked.
+    func resetHistory() {
+        try? store.clear()
+        history = []
+        hasRecordedSession = true  // do not re-bank the current sitting into a cleared history
+    }
+
     /// Banks the sitting into the history. A sitting with no finished round is not a game.
     private func recordSession() {
         guard !hasRecordedSession, !session.completedRounds.isEmpty else { return }

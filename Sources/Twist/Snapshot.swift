@@ -91,7 +91,7 @@ enum Snapshot {
                     scheme: scheme,
                     to: directory.appendingPathComponent("paused-\(name).png"))
                 try write(
-                    StatsView(history: modelWithHistory(lexicon: lexicon).history),
+                    StatsView(history: modelWithHistory(lexicon: lexicon).history, onReset: {}),
                     size: CGSize(width: 460, height: 520),
                     scheme: scheme,
                     to: directory.appendingPathComponent("stats-\(name).png"))

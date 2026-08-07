@@ -43,6 +43,12 @@ final class AppModel {
         history = store.load()
     }
 
+    /// Wipes every recorded game. Irreversible, so the UI confirms before calling it.
+    func resetHistory() {
+        try? store.clear()
+        history = []
+    }
+
     // MARK: - Persisted mode
 
     private static let clockKey = "ClockSeconds"  // 0 means untimed
