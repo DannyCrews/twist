@@ -44,6 +44,15 @@ clean:
 app:
 	Scripts/bundle.sh
 
+# Everything: unit tests, the full pass over the shipped word list, and a guard that every
+# screen still renders something. `make test` alone is the fast inner loop.
+check: test
+	@echo "\n--- shipped word list ---"
+	@swift run dicttool verify
+	@echo "\n--- rendered screens ---"
+	@swift run Twist --snapshot build/snapshots >/dev/null
+	@python3 Scripts/check-snapshots.py build/snapshots
+
 snapshots:
 	swift run Twist --snapshot build/snapshots
 

@@ -19,5 +19,6 @@ let package = Package(
             exclude: ["blocklist.txt"]
         ),
         .testTarget(name: "TwistKitTests", dependencies: ["TwistKit"]),
+        .testTarget(name: "TwistAppTests", dependencies: ["Twist", "TwistKit"]),
     ]
 )

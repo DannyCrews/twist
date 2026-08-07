@@ -133,10 +133,11 @@ clears 12:1, and the tightest pair measures 4.8:1 against a 4.5 floor.
 ## Building and hacking
 
 ```bash
+make test        # 81 unit tests — the fast inner loop
+make check       # tests + full pass over the shipped word list + every screen renders
 make dict        # rebuild the word list from source data
 make app         # assemble build/Twist.app
 make run         # run without bundling
-make test        # unit tests
 make snapshots   # render every screen to PNG, light and dark
 make sounds      # export every audio cue to WAV
 ```
@@ -151,7 +152,8 @@ instead of passing silently; the Makefile explains the mechanism at the top.
 | `Sources/TwistKit/` | Every rule, with no UI imports — signatures, lexicon, round state machine, scoring, statistics |
 | `Sources/Twist/` | The SwiftUI app |
 | `Sources/dicttool/` | Offline pipeline that builds and verifies the shipped word list |
-| `Tests/TwistKitTests/` | 49 tests over the rules |
+| `Tests/TwistKitTests/` | 54 tests over the rules — no UI, no I/O |
+| `Tests/TwistAppTests/` | 27 tests over the app layer and the shipped word list |
 
 There is no Xcode project, and no dependency on Xcode. Everything builds with SwiftPM against
 the Command Line Tools SDK.
@@ -193,6 +195,31 @@ swift run dicttool stats     # the distributions behind the tuning constants
 ```
 
 Every tuning constant lives in one place: `Sources/dicttool/Build.swift`.
+
+### What the tests cover
+
+Three layers, because they fail in different ways.
+
+**Rules** (`TwistKitTests`) — signatures, the lexicon, the round state machine, scoring,
+statistics. Pure functions and value types, so these are fast and deterministic.
+
+**The app layer** (`TwistAppTests`) — staging and unstaging letters, twisting while a word is
+part-typed, pause blocking input, the sound preference persisting, resetting history. This
+layer had no tests for most of the project's life and is where nearly every shipped bug lived:
+a mute toggle that muted without redrawing, staged letters that could not be clicked back, a
+twist that discarded the word in progress. None of them were rule bugs, so none of them were
+visible to the layer above.
+
+**The shipped data** (`ShippedLexiconTests`) — that the word list loads, that every sampled rack
+has a findable common bingo word, that recorded targets match what the lexicon yields, and that
+no blocked word survived the build. That last one exists because the worst defect in this
+project was the board dealing ethnic slurs as words to find, and the rules were working
+perfectly the whole time. `make check` adds the exhaustive pass over all 6,073 racks via
+`dicttool verify`.
+
+`make check` also re-renders every screen and asserts each one has content, because
+`ImageRenderer` returns a blank image for a `ScrollView` rather than failing — a real trap here
+more than once.
 
 ### Verifying the interface
 
