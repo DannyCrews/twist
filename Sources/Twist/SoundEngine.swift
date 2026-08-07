@@ -161,9 +161,15 @@ final class SoundEngine {
             Note(frequency: 1046.50, start: 0.15, duration: 1.4, gain: 0.26),
         ])
 
-        // Time running out is a low, soft pulse. Never a clock tick — nothing raises a pulse
+        // Time running out: still one soft note, never a clock tick — nothing raises a pulse
         // rate like being ticked at.
-        buffers["timeLow"] = render(notes: [Note(frequency: 196.00, start: 0, duration: 0.4, gain: 0.20)])
+        //
+        // G4 rather than the G3 this started on. K-weighted measurement put the low version at
+        // −26.8 LUFS: quieter than the rejection sound and 11 LU under the word cues, because
+        // ears discount low frequencies heavily and its respectable −13 dBFS peak hid that.
+        // The one cue whose whole job is to be noticed was the least audible thing in the game.
+        // An octave up buys audibility without making it loud.
+        buffers["timeLow"] = render(notes: [Note(frequency: 392.00, start: 0, duration: 0.5, gain: 0.30)])
     }
 
     private struct Note {

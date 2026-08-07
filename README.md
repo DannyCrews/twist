@@ -65,10 +65,16 @@ Type. Letters lift out of the rack as you use them.
 | **Delete** | Take the last letter back |
 | **Escape** | Clear the line |
 | **Space** | Twist — shuffle the rack |
+| **⌘P** | Pause / resume |
 | **⌘N** | New game |
 | **⇧⌘T** | Statistics |
 
-You can click the tiles instead of typing, if you'd rather.
+You can click the tiles instead of typing, if you'd rather. **Pause** and **Stats** are buttons
+in the top bar as well as shortcuts.
+
+Pausing stops the clock and hides *both* the board and the rack — otherwise pausing would just
+be unlimited time to work out the anagram. Opening the stats screen pauses too, so checking your
+streak never costs you the round.
 
 The board shows a slot for every word in the rack, grouped by length, so you always know what's
 left to find. Words score ten points per letter squared — 90 for a three, 490 for a seven — and

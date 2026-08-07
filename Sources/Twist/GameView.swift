@@ -11,9 +11,17 @@ struct GameView: View {
         VStack(spacing: 0) {
             ScoreBar(model: model)
             Divider()
-            WordBoard(model: model)
-            Divider()
-            PlayArea(model: model)
+            // The curtain covers the board *and* the rack. Hiding only the word slots would
+            // still leave the letters on screen with the clock stopped, which is the whole
+            // anagram to work out at leisure. Nothing below the score bar survives a pause.
+            ZStack {
+                VStack(spacing: 0) {
+                    WordBoard(model: model)
+                    Divider()
+                    PlayArea(model: model)
+                }
+                PausedCurtain(model: model)
+            }
         }
         .background(Theme.background)
         // The whole window is the keyboard target — there is no text field to lose focus to.
@@ -32,6 +40,9 @@ struct GameView: View {
             StatsView(model: model)
         }
         .onReceive(NotificationCenter.default.publisher(for: .showStatistics)) { _ in
+            // Pause here rather than at the button, so the menu item and the shortcut stop the
+            // clock too. Reading your stats should never cost you the round.
+            model.pause()
             showingStats = true
         }
     }
@@ -45,6 +56,8 @@ struct GameView: View {
             model.backspace()
         case .escape:
             model.clear()
+        case "p" where press.modifiers.contains(.command):
+            model.togglePause()
         case .space:
             model.twist()
         default:
@@ -80,11 +93,27 @@ private struct ScoreBar: View {
             Spacer()
 
             if let seconds = model.secondsRemaining {
-                TimerLabel(seconds: seconds)
+                TimerLabel(seconds: seconds, isPaused: model.isPaused)
             } else {
                 Label("Untimed", systemImage: "infinity")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
+
+            Button {
+                model.togglePause()
+            } label: {
+                Label(
+                    model.isPaused ? "Resume" : "Pause",
+                    systemImage: model.isPaused ? "play.fill" : "pause.fill")
+            }
+            .help(model.isPaused ? "Resume (\u{2318}P)" : "Pause the clock (\u{2318}P)")
+
+            Button {
+                NotificationCenter.default.post(name: .showStatistics, object: nil)
+            } label: {
+                Label("Stats", systemImage: "chart.bar.fill")
+            }
+            .help("Scores, streaks and recent games (\u{21E7}\u{2318}T)")
 
             Spacer()
 
@@ -104,16 +133,18 @@ private struct ScoreBar: View {
 
 private struct TimerLabel: View {
     let seconds: Int
+    var isPaused = false
 
-    private var isUrgent: Bool { seconds <= 15 }
+    private var isUrgent: Bool { seconds <= 15 && !isPaused }
 
     var body: some View {
         Label {
             Text("\(seconds / 60):\(seconds % 60, format: .number.precision(.integerLength(2)))")
                 .monospacedDigit()
         } icon: {
-            Image(systemName: "timer")
+            Image(systemName: isPaused ? "pause.circle" : "timer")
         }
+        .opacity(isPaused ? 0.5 : 1)
         .font(.callout.weight(isUrgent ? .bold : .regular))
         .foregroundStyle(isUrgent ? Theme.urgent : Theme.textPrimary)
         .accessibilityLabel("\(seconds) seconds remaining")
@@ -174,6 +205,35 @@ private struct WordSlot: View {
             .scaleEffect(isFound ? 1 : 0.97)
             .animation(reduceMotion ? nil : .snappy(duration: 0.28, extraBounce: 0.2), value: isFound)
             .accessibilityLabel(isFound ? word : "unfound \(word.count) letter word")
+    }
+}
+
+/// Covers the board while paused, so stopping the clock cannot double as free study time.
+private struct PausedCurtain: View {
+    let model: GameModel
+
+    var body: some View {
+        if model.isPaused {
+            ZStack {
+                Rectangle().fill(Theme.background)
+                VStack(spacing: 14) {
+                    Image(systemName: "pause.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundStyle(Theme.accent)
+                    Text("Paused")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Clock stopped. Board and rack hidden.")
+                        .font(.callout)
+                        .foregroundStyle(Theme.textSecondary)
+                    Button("Resume") { model.togglePause() }
+                        .controlSize(.large)
+                        .keyboardShortcut(.defaultAction)
+                        .padding(.top, 4)
+                }
+            }
+            .transition(.opacity)
+        }
     }
 }
 

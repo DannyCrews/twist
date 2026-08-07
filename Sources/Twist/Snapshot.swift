@@ -58,6 +58,16 @@ enum Snapshot {
                     scheme: scheme,
                     to: directory.appendingPathComponent("review-\(name).png"))
                 try write(
+                    GameView(model: mutedModel(lexicon: lexicon)),
+                    size: CGSize(width: 760, height: 700),
+                    scheme: scheme,
+                    to: directory.appendingPathComponent("muted-\(name).png"))
+                try write(
+                    GameView(model: pausedModel(lexicon: lexicon)),
+                    size: CGSize(width: 760, height: 700),
+                    scheme: scheme,
+                    to: directory.appendingPathComponent("paused-\(name).png"))
+                try write(
                     StatsView(model: modelWithHistory(lexicon: lexicon)),
                     size: CGSize(width: 460, height: 520),
                     scheme: scheme,
@@ -107,6 +117,21 @@ enum Snapshot {
             settings: GameSettings(clock: .timed(seconds: 120), rackSizes: [6]))
         play(model.round.solutions.filter { $0.word.count == 3 }.prefix(2).map(\.word), on: model)
         model.endRound()
+        return model
+    }
+
+    /// Sound turned off. The icon in the image is the evidence that toggling actually
+    /// reaches the view — a computed forwarder muted the engine but never redrew the button.
+    private static func mutedModel(lexicon: Lexicon) -> GameModel {
+        let model = playedModel(lexicon: lexicon)
+        model.isSoundEnabled = false
+        return model
+    }
+
+    /// A round part-way through, then paused — the image has to show no letters anywhere.
+    private static func pausedModel(lexicon: Lexicon) -> GameModel {
+        let model = playedModel(lexicon: lexicon)
+        model.togglePause()
         return model
     }
 

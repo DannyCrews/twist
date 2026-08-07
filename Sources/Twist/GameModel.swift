@@ -33,17 +33,24 @@ final class GameModel {
     private(set) var typedTileIndices: [Int] = []
 
     private(set) var secondsRemaining: Int?
+
+    /// Paused stops the clock and hides the board. Hiding matters: without it, pausing is a
+    /// way to study the words with the timer stopped, which only cheats the player.
+    private(set) var isPaused = false
     private(set) var feedback: Feedback = .none
 
     private var clockTask: Task<Void, Never>?
     private let sound = SoundEngine()
 
     /// Sound is on by default and remembered between launches.
-    var isSoundEnabled: Bool {
-        get { sound.isEnabled }
-        set {
-            sound.isEnabled = newValue
-            UserDefaults.standard.set(newValue, forKey: "SoundEnabled")
+    ///
+    /// Stored here rather than computed through to `SoundEngine`: `@Observable` only tracks
+    /// stored properties, so a computed forwarder muted the audio correctly while leaving the
+    /// button's icon frozen on its old state — working, and indistinguishable from broken.
+    var isSoundEnabled: Bool = true {
+        didSet {
+            sound.isEnabled = isSoundEnabled
+            UserDefaults.standard.set(isSoundEnabled, forKey: "SoundEnabled")
         }
     }
 
@@ -63,9 +70,11 @@ final class GameModel {
             preconditionFailure("lexicon contains no playable racks")
         }
         self.session = session
+        // didSet does not fire during init, so both sides are set explicitly.
         if UserDefaults.standard.object(forKey: "SoundEnabled") != nil {
-            sound.isEnabled = UserDefaults.standard.bool(forKey: "SoundEnabled")
+            isSoundEnabled = UserDefaults.standard.bool(forKey: "SoundEnabled")
         }
+        sound.isEnabled = isSoundEnabled
         startClock()
     }
 
@@ -110,6 +119,7 @@ final class GameModel {
 
     /// Stages a letter, consuming a matching rack tile. Ignored when no tile matches.
     func type(_ character: Character) {
+        guard !isPaused else { return }
         let letter = Character(character.lowercased())
         guard let tile = availableTiles.first(where: { $0.letter == letter }) else { return }
         typedTileIndices.append(tile.index)
@@ -119,6 +129,7 @@ final class GameModel {
 
     /// Stages a specific tile, for clicking rather than typing.
     func stage(tileAt index: Int) {
+        guard !isPaused else { return }
         guard round.tiles.indices.contains(index), !typedTileIndices.contains(index) else { return }
         typedTileIndices.append(index)
         feedback = .none
@@ -137,6 +148,7 @@ final class GameModel {
     }
 
     func submit() {
+        guard !isPaused else { return }
         let word = typedWord
         guard !word.isEmpty else { return }
 
@@ -168,16 +180,33 @@ final class GameModel {
     /// Shuffles the rack. Staged letters are returned to it first — their indices would
     /// otherwise point at different tiles.
     func twist() {
+        guard !isPaused else { return }
         typedTileIndices.removeAll()
         session.twist()
         feedback = .none
         sound.play(.twist)
     }
 
+    /// Pausing clears anything half-typed, so resuming starts from a clean line rather than
+    /// from letters you no longer remember choosing.
+    func togglePause() {
+        guard !isReviewing, !isFinished else { return }
+        isPaused.toggle()
+        if isPaused {
+            typedTileIndices.removeAll()
+            feedback = .none
+        }
+    }
+
+    func pause() {
+        if !isPaused { togglePause() }
+    }
+
     // MARK: - Round flow
 
     func endRound() {
         stopClock()
+        isPaused = false
         typedTileIndices.removeAll()
         feedback = .none
         session.endRound()
@@ -188,6 +217,7 @@ final class GameModel {
             recordSession()
             return
         }
+        isPaused = false
         typedTileIndices.removeAll()
         feedback = .none
         startClock()
@@ -200,6 +230,7 @@ final class GameModel {
         else { return }
         session = fresh
         hasRecordedSession = false
+        isPaused = false
         typedTileIndices.removeAll()
         feedback = .none
         startClock()
@@ -229,6 +260,7 @@ final class GameModel {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
                 guard let self, !Task.isCancelled else { return }
+                if self.isPaused { continue }
                 guard let remaining = self.secondsRemaining, remaining > 0 else { return }
                 self.secondsRemaining = remaining - 1
                 // One soft low note at ten seconds. Not a countdown tick — being ticked at is
