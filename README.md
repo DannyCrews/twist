@@ -70,7 +70,9 @@ Type. Letters lift out of the rack as you use them.
 | **⇧⌘T** | Statistics |
 
 You can click the tiles instead of typing, if you'd rather. **Pause** and **Stats** are buttons
-in the top bar as well as shortcuts.
+in the top bar as well as shortcuts, and **Twist** and **Enter** sit directly under the rack —
+offset slightly right, because the input line fills left-to-right, so that is where your hand
+already is when a word is finished. Sound and light/dark are toggles along the bottom.
 
 Pausing stops the clock and hides *both* the board and the rack — otherwise pausing would just
 be unlimited time to work out the anagram. Opening the stats screen pauses too, so checking your

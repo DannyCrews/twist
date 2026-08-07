@@ -42,6 +42,10 @@ final class GameModel {
     private var clockTask: Task<Void, Never>?
     private let sound = SoundEngine()
 
+    /// Injected so the snapshot tool can write preferences into a throwaway domain. Writing to
+    /// `.standard` there meant rendering the muted fixture silently muted the real game.
+    private let defaults: UserDefaults
+
     /// Sound is on by default and remembered between launches.
     ///
     /// Stored here rather than computed through to `SoundEngine`: `@Observable` only tracks
@@ -50,16 +54,18 @@ final class GameModel {
     var isSoundEnabled: Bool = true {
         didSet {
             sound.isEnabled = isSoundEnabled
-            UserDefaults.standard.set(isSoundEnabled, forKey: "SoundEnabled")
+            defaults.set(isSoundEnabled, forKey: "SoundEnabled")
         }
     }
 
     init(
         lexicon: Lexicon,
         settings: GameSettings = GameSettings(rackSizes: [6, 7]),
-        store: HistoryStore? = nil
+        store: HistoryStore? = nil,
+        defaults: UserDefaults = .standard
     ) {
         self.lexicon = lexicon
+        self.defaults = defaults
         self.store = store ?? HistoryStore(
             fileURL: (try? HistoryStore.defaultURL())
                 ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("history.json"))
@@ -71,8 +77,8 @@ final class GameModel {
         }
         self.session = session
         // didSet does not fire during init, so both sides are set explicitly.
-        if UserDefaults.standard.object(forKey: "SoundEnabled") != nil {
-            isSoundEnabled = UserDefaults.standard.bool(forKey: "SoundEnabled")
+        if defaults.object(forKey: "SoundEnabled") != nil {
+            isSoundEnabled = defaults.bool(forKey: "SoundEnabled")
         }
         sound.isEnabled = isSoundEnabled
         startClock()

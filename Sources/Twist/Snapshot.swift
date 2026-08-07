@@ -39,6 +39,14 @@ enum Snapshot {
         }
     }
 
+    /// A throwaway preferences domain. Fixtures flip real settings, and those writes must not
+    /// reach the player's own preferences.
+    private static let scratchDefaults: UserDefaults = {
+        let suite = "net.crews.twist.snapshot"
+        UserDefaults.standard.removePersistentDomain(forName: suite)
+        return UserDefaults(suiteName: suite) ?? .standard
+    }()
+
     static func run(into directory: URL) -> Never {
         do {
             try FileManager.default.createDirectory(
@@ -101,7 +109,8 @@ enum Snapshot {
     private static func playedModel(lexicon: Lexicon) -> GameModel {
         let model = GameModel(
             lexicon: lexicon,
-            settings: GameSettings(clock: .timed(seconds: 120), rackSizes: [6]))
+            settings: GameSettings(clock: .timed(seconds: 120), rackSizes: [6]),
+            defaults: scratchDefaults)
         let solutions = model.round.solutions.filter(\.isCommon).sorted { $0.word < $1.word }
         play(solutions.prefix(max(1, solutions.count / 3)).map(\.word), on: model)
         // Leave a few letters staged, so the input line is not empty in the image.
@@ -114,7 +123,8 @@ enum Snapshot {
     private static func reviewedModel(lexicon: Lexicon) -> GameModel {
         let model = GameModel(
             lexicon: lexicon,
-            settings: GameSettings(clock: .timed(seconds: 120), rackSizes: [6]))
+            settings: GameSettings(clock: .timed(seconds: 120), rackSizes: [6]),
+            defaults: scratchDefaults)
         play(model.round.solutions.filter { $0.word.count == 3 }.prefix(2).map(\.word), on: model)
         model.endRound()
         return model
@@ -156,7 +166,8 @@ enum Snapshot {
         return GameModel(
             lexicon: lexicon,
             settings: GameSettings(clock: .timed(seconds: 120), rackSizes: [6]),
-            store: store)
+            store: store,
+            defaults: scratchDefaults)
     }
 
     /// A sitting that has ended, for the game-over screen.

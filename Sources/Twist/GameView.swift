@@ -248,7 +248,9 @@ private struct PlayArea: View {
             FeedbackLine(feedback: model.feedback)
             InputLine(word: model.typedWord, rackSize: model.round.puzzle.rackSize, namespace: tiles)
             Rack(model: model, namespace: tiles)
-            Controls(model: model)
+            PrimaryActions(model: model)
+            UtilityBar(model: model)
+                .padding(.top, 2)
         }
         .padding(20)
         .frame(maxWidth: .infinity)
@@ -328,18 +330,50 @@ private struct Rack: View {
     }
 }
 
-private struct Controls: View {
+/// Twist and Enter, sitting directly beneath the rack.
+///
+/// Offset right of the rack's centre rather than centred on it. The input line fills
+/// left-to-right, so when a word is finished both eye and pointer are already right of centre;
+/// putting the action there shortens the travel to reach it. Enter sits rightmost as the
+/// primary action, which is also the macOS convention.
+private struct PrimaryActions: View {
     let model: GameModel
 
     var body: some View {
         HStack(spacing: 12) {
             Button("Twist") { model.twist() }
                 .help("Shuffle the rack (Space)")
-            Button("Clear") { model.clear() }
-                .help("Clear what you have typed (Escape)")
             Button("Enter") { model.submit() }
                 .keyboardShortcut(.defaultAction)
                 .help("Submit the word (Return)")
+        }
+        .controlSize(.extraLarge)
+        .buttonStyle(.bordered)
+        .pointerStyle(.link)
+        // Leading padding on a full-width container shifts the centred content right by half
+        // the padding — layout-safe, unlike .offset, which would not reserve the space.
+        .frame(maxWidth: .infinity)
+        .padding(.leading, 130)
+    }
+}
+
+/// Everything you reach for rarely: clearing, the two toggles, and ending the round.
+///
+/// Separated from Twist and Enter so the constant actions and the occasional ones do not sit
+/// in one undifferentiated row — and so Give Up is nowhere near Enter, where a mis-click would
+/// end the round.
+private struct UtilityBar: View {
+    let model: GameModel
+
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("Appearance") private var appearance: Appearance = .dark
+
+    private var isDark: Bool { colorScheme == .dark }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Button("Clear") { model.clear() }
+                .help("Clear what you have typed (Escape)")
 
             Spacer()
 
@@ -351,12 +385,24 @@ private struct Controls: View {
             .help(model.isSoundEnabled ? "Mute" : "Unmute")
             .accessibilityLabel("Sound")
 
+            // Flips straight between light and dark off the resolved scheme, so it does the
+            // obvious thing even when the setting is currently Follow System. The three-way
+            // choice stays in View > Appearance.
+            Button {
+                appearance = isDark ? .light : .dark
+            } label: {
+                Image(systemName: isDark ? "sun.max" : "moon")
+                    .frame(width: 22, height: 22)
+            }
+            .help(isDark ? "Switch to light" : "Switch to dark")
+            .accessibilityLabel(isDark ? "Switch to light appearance" : "Switch to dark appearance")
+
             Button(model.session.settings.secondsPerRound == nil ? "End Round" : "Give Up") {
                 model.endRound()
             }
             .help("Finish this round and see what you missed")
         }
-        .controlSize(.extraLarge)
+        .controlSize(.large)
         .buttonStyle(.bordered)
         .pointerStyle(.link)
     }
