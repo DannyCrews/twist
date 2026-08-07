@@ -40,14 +40,21 @@ struct BuildResult {
     let puzzles: [PuzzleSpec]
     let skippedBands: [Int: Int]  // rack size -> racks rejected for falling outside the band
     let skippedUncommonBingo: Int
+    let blockedWords: Int
 }
 
-func buildLexicon(words: [String], frequencies: [String: Int]) -> BuildResult {
-    // Accepted words: everything in ENABLE that a rack could physically spell.
+func buildLexicon(
+    words: [String], frequencies: [String: Int], blocked: Set<String> = []
+) -> BuildResult {
+    // Accepted words: everything in ENABLE that a rack could physically spell, less anything
+    // blocked. Blocked words are removed outright rather than merely demoted out of the common
+    // tier — the game should not quietly award points for typing a slur either.
     var entries: [LexiconEntry] = []
     var signatureToEntries: [Signature: [LexiconEntry]] = [:]
+    var blockedCount = 0
     for word in words where Tuning.wordLengths.contains(word.count) {
         guard let signature = Signature(word) else { continue }
+        if blocked.contains(word) { blockedCount += 1; continue }
         let entry = LexiconEntry(
             word: word,
             isCommon: (frequencies[word] ?? 0) >= Tuning.commonThreshold
@@ -92,6 +99,7 @@ func buildLexicon(words: [String], frequencies: [String: Int]) -> BuildResult {
         entries: entries,
         puzzles: puzzles,
         skippedBands: skippedBands,
-        skippedUncommonBingo: skippedUncommonBingo
+        skippedUncommonBingo: skippedUncommonBingo,
+        blockedWords: blockedCount
     )
 }

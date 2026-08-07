@@ -20,7 +20,8 @@ func build() async throws {
     async let enable = loadEnable()
     async let subtlex = loadFrequencies()
     let (words, frequencies) = try await (enable, subtlex)
-    let result = buildLexicon(words: words, frequencies: frequencies)
+    let blocked = try await loadBlocklist()
+    let result = buildLexicon(words: words, frequencies: frequencies, blocked: blocked)
 
     let text = LexiconFile.encode(entries: result.entries, puzzles: result.puzzles)
     try FileManager.default.createDirectory(
@@ -41,6 +42,7 @@ func build() async throws {
         print("          \(size)-letter \(bucket.count.formatted()) — \(byDifficulty)")
     }
     print("""
+          blocked   \(result.blockedWords.formatted()) words removed by the blocklist
           rejected  \(result.skippedUncommonBingo.formatted()) racks with no common bingo word
                     \(result.skippedBands.values.reduce(0, +).formatted()) racks outside the \
         \(Tuning.commonWordBand.lowerBound)–\(Tuning.commonWordBand.upperBound) common-word band

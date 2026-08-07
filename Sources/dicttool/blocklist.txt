@@ -1,0 +1,61 @@
+# Words excluded from the lexicon entirely — never dealt, never shown as a target, never
+# scored. One per line; blank lines and # comments ignored.
+#
+# This supplements the LDNOOBW profanity list that dicttool fetches, which is a profanity list
+# rather than a slur list and covered only 5 of the 16 offensive terms measured on real boards.
+#
+# No automatic signal identifies these — not frequency, not length, not any corpus statistic.
+# A curated list is the mechanism, and a curated list is necessarily incomplete. Add to it.
+#
+# Grouped so the contested entries are easy to find and remove. The game shows these as words
+# it is ASKING you to find, which is why the bar here is lower than "is this ever acceptable
+# English": a word can be perfectly legitimate in one sense and still be one nobody wants
+# printed on a board as a target.
+
+# --- Ethnic, racial and national slurs ---
+abo
+chink
+coon
+dago
+darkie
+gook
+honky
+jap
+kike
+mick
+negress
+paki
+spic
+squaw
+wetback
+wog
+wop
+yid
+
+# --- Slurs for sexuality and gender ---
+fag
+fags
+faggot
+faggots
+tranny
+trannies
+
+# --- Slurs for disability ---
+mongoloid
+retard
+retards
+retarded
+spastic
+spaz
+spazz
+
+# --- Contested: offensive as a noun for a person, ordinary in another sense ---
+# Remove any of these if you would rather keep the innocent meaning in play.
+# cripple  — also a verb
+# gyp      — from "gypsy"; usually used unaware
+# queer    — widely reclaimed and used neutrally
+# dyke     — also an embankment
+# lame     — also ordinary
+gyp
+gypped
+gyps

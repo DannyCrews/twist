@@ -1,4 +1,5 @@
 import Foundation
+import TwistKit
 
 /// The two public datasets the lexicon is built from, cached under `Data/` after first fetch.
 enum Input: String, CaseIterable {
@@ -10,12 +11,18 @@ enum Input: String, CaseIterable {
     /// The npm wrapper this comes from is ISC-licensed.
     case subtlex = "subtlex.json"
 
+    /// LDNOOBW, a widely used profanity list, CC BY 4.0. Covers the obscenity half; the slurs
+    /// come from the repo's own blocklist.txt.
+    case profanity = "ldnoobw-en.txt"
+
     var url: URL {
         switch self {
         case .enable:
             URL(string: "https://raw.githubusercontent.com/dolph/dictionary/master/enable1.txt")!
         case .subtlex:
             URL(string: "https://raw.githubusercontent.com/words/subtlex-word-frequencies/master/index.json")!
+        case .profanity:
+            URL(string: "https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en")!
         }
     }
 
@@ -74,4 +81,34 @@ func loadFrequencies() async throws -> [String: Int] {
         else { return }
         totals[entry.word, default: 0] += entry.count
     }
+}
+
+
+/// Words the game must never deal, show, or score.
+///
+/// Two sources, because neither alone is enough. LDNOOBW is a profanity list and covered only
+/// 5 of the 16 offensive terms found on real boards; `blocklist.txt` in this directory carries
+/// the slurs it misses. Multi-word entries and anything outside the playable length are dropped
+/// on the way in, since no rack could spell them anyway.
+func loadBlocklist() async throws -> Set<String> {
+    var blocked = Set<String>()
+
+    let data = try await Input.profanity.load()
+    for line in String(decoding: data, as: UTF8.self).split(separator: "\n") {
+        let word = line.trimmingCharacters(in: .whitespaces).lowercased()
+        if Tuning.wordLengths.contains(word.count), Signature(word) != nil {
+            blocked.insert(word)
+        }
+    }
+
+    let local = URL(fileURLWithPath: "Sources/dicttool/blocklist.txt")
+    guard let text = try? String(contentsOf: local, encoding: .utf8) else {
+        throw Failure("blocklist.txt is missing from \(local.path)")
+    }
+    for line in text.split(separator: "\n") {
+        let word = line.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !word.isEmpty, !word.hasPrefix("#") else { continue }
+        blocked.insert(word)
+    }
+    return blocked
 }

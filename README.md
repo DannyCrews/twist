@@ -170,8 +170,21 @@ Capitalized SUBTLEX entries are dropped rather than folded in. SUBTLEX capitaliz
 it usually appears capitalized, which is how it marks proper nouns; lowercasing them made `mae`,
 `mel` and `nam` count as ordinary English words.
 
-The result is 51,852 playable words, 12,269 of them common, and 6,094 racks sorted into four
-difficulty tiers.
+A third source is a blocklist. ENABLE contains ethnic slurs, and the game was dealing them as
+words it asked you to find — a probe of 27 offensive terms found 16 of them on the board. The
+[LDNOOBW list](https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words)
+(CC BY 4.0) is fetched for the profanity half; it is a profanity list rather than a slur list
+and covered only 5 of the 16, so `Sources/dicttool/blocklist.txt` carries the rest. Blocked
+words are removed outright, not merely demoted, so none of them scores either.
+
+No corpus statistic identifies these words — not frequency, not length. A curated list is the
+mechanism, and it is necessarily incomplete; the file is grouped and commented so it is easy to
+extend or to argue with. Words that are offensive in one sense and ordinary in another
+(`cripple`, `queer`, `dyke`, `lame`) are deliberately kept, and listed in the file's comments
+so that choice is visible rather than silent.
+
+The result is 51,733 playable words, 12,174 of them common, and 6,073 racks sorted into four
+difficulty tiers, with 119 words blocked.
 
 ```bash
 swift run dicttool sample    # print racks with their solutions, to judge how they play
