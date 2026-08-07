@@ -4,6 +4,7 @@ import TwistKit
 
 struct GameView: View {
     @Bindable var model: GameModel
+    var onQuit: () -> Void = {}
     @FocusState private var boardFocused: Bool
     @State private var showingStats = false
 
@@ -34,10 +35,10 @@ struct GameView: View {
             ReviewView(model: model)
         }
         .sheet(isPresented: .constant(model.isFinished)) {
-            GameOverView(model: model)
+            GameOverView(model: model, onQuit: onQuit)
         }
         .sheet(isPresented: $showingStats) {
-            StatsView(model: model)
+            StatsView(history: model.history)
         }
         .onReceive(NotificationCenter.default.publisher(for: .showStatistics)) { _ in
             // Pause here rather than at the button, so the menu item and the shortcut stop the
@@ -158,10 +159,12 @@ private struct TimerLabel: View {
 private struct WordBoard: View {
     let model: GameModel
 
-    // No ScrollView: a rack tops out at 45 common words, which fits, and hiding words below a
-    // fold during a timed round would be the wrong trade even if it did not.
+    // Seven-letter racks reach five length groups and can exceed the window, which pushed the
+    // score bar and the controls off screen. A six-letter rack still fits without scrolling at
+    // the minimum window size; this is the safety valve for the tall ones.
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        ScrollIfNeeded {
+            VStack(alignment: .leading, spacing: 16) {
             ForEach(model.round.commonWordsByLength, id: \.length) { group in
                 VStack(alignment: .leading, spacing: 7) {
                     Text("^[\(group.length) letter](inflect: true)")
@@ -178,10 +181,12 @@ private struct WordBoard: View {
                     }
                 }
             }
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 18)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 18)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
@@ -203,7 +208,7 @@ private struct WordSlot: View {
                     .fill(isFound ? Theme.accentSoft : Theme.slot)
             )
             .scaleEffect(isFound ? 1 : 0.97)
-            .animation(reduceMotion ? nil : .snappy(duration: 0.28, extraBounce: 0.2), value: isFound)
+            .animation(reduceMotion ? nil : .snappy(duration: 0.24, extraBounce: 0.08), value: isFound)
             .accessibilityLabel(isFound ? word : "unfound \(word.count) letter word")
     }
 }
@@ -277,7 +282,6 @@ private struct FeedbackLine: View {
         }
         .font(.callout.weight(.medium))
         .frame(height: 20)
-        .animation(.snappy, value: feedback)
         .accessibilityLiveRegion()
     }
 }
@@ -342,13 +346,13 @@ private struct PrimaryActions: View {
     var body: some View {
         HStack(spacing: 12) {
             Button("Twist") { model.twist() }
+                .buttonStyle(PrimaryButtonStyle())
                 .help("Shuffle the rack (Space)")
             Button("Enter") { model.submit() }
+                .buttonStyle(PrimaryButtonStyle(isProminent: true))
                 .keyboardShortcut(.defaultAction)
                 .help("Submit the word (Return)")
         }
-        .controlSize(.extraLarge)
-        .buttonStyle(.bordered)
         .pointerStyle(.link)
         // Leading padding on a full-width container shifts the centred content right by half
         // the padding — layout-safe, unlike .offset, which would not reserve the space.
@@ -400,6 +404,7 @@ private struct UtilityBar: View {
             Button(model.session.settings.secondsPerRound == nil ? "End Round" : "Give Up") {
                 model.endRound()
             }
+            .frame(minHeight: 32)
             .help("Finish this round and see what you missed")
         }
         .controlSize(.large)

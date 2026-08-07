@@ -4,6 +4,7 @@ import TwistKit
 /// End of a sitting: what it was worth, and where it sits against everything before it.
 struct GameOverView: View {
     let model: GameModel
+    var onQuit: () -> Void = {}
 
     private var lastGame: GameRecord? { model.history.last }
 
@@ -27,13 +28,16 @@ struct GameOverView: View {
                     .foregroundStyle(isBest ? Theme.accent : Theme.textSecondary)
             }
 
-            StatsGrid(statistics: model.statistics, history: model.history)
+            StatsGrid(statistics: Statistics(records: model.history), history: model.history)
                 .padding(.top, 4)
 
-            Button("New Game") { model.restart() }
-                .keyboardShortcut(.defaultAction)
-                .controlSize(.large)
-                .padding(.top, 4)
+            HStack(spacing: 12) {
+                Button("Change Mode") { onQuit() }
+                Button("Play Again") { model.restart() }
+                    .keyboardShortcut(.defaultAction)
+            }
+            .controlSize(.large)
+            .padding(.top, 4)
         }
         .padding(32)
         .foregroundStyle(Theme.textPrimary)
@@ -44,15 +48,17 @@ struct GameOverView: View {
 
 /// Lifetime totals, reachable at any time from the menu.
 struct StatsView: View {
-    let model: GameModel
+    let history: [GameRecord]
     @Environment(\.dismiss) private var dismiss
+
+    private var statistics: Statistics { Statistics(records: history) }
 
     var body: some View {
         VStack(spacing: 20) {
             Text("Statistics")
                 .font(.title2.weight(.semibold))
 
-            if model.history.isEmpty {
+            if history.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "chart.bar")
                         .font(.system(size: 34))
@@ -62,8 +68,8 @@ struct StatsView: View {
                 }
                 .frame(maxHeight: .infinity)
             } else {
-                StatsGrid(statistics: model.statistics, history: model.history)
-                RecentGames(records: model.history)
+                StatsGrid(statistics: statistics, history: history)
+                RecentGames(records: history)
             }
 
             Button("Done") { dismiss() }

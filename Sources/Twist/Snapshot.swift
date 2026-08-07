@@ -57,7 +57,7 @@ enum Snapshot {
                 let name = scheme == .light ? "light" : "dark"
                 try write(
                     GameView(model: playedModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 700),
+                    size: CGSize(width: 760, height: 780),
                     scheme: scheme,
                     to: directory.appendingPathComponent("game-\(name).png"))
                 try write(
@@ -66,17 +66,27 @@ enum Snapshot {
                     scheme: scheme,
                     to: directory.appendingPathComponent("review-\(name).png"))
                 try write(
+                    GameView(model: untimedModel(lexicon: lexicon)),
+                    size: CGSize(width: 760, height: 780),
+                    scheme: scheme,
+                    to: directory.appendingPathComponent("untimed-\(name).png"))
+                try write(
+                    StartView(app: menuModel(lexicon: lexicon)),
+                    size: CGSize(width: 760, height: 780),
+                    scheme: scheme,
+                    to: directory.appendingPathComponent("start-\(name).png"))
+                try write(
                     GameView(model: mutedModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 700),
+                    size: CGSize(width: 760, height: 780),
                     scheme: scheme,
                     to: directory.appendingPathComponent("muted-\(name).png"))
                 try write(
                     GameView(model: pausedModel(lexicon: lexicon)),
-                    size: CGSize(width: 760, height: 700),
+                    size: CGSize(width: 760, height: 780),
                     scheme: scheme,
                     to: directory.appendingPathComponent("paused-\(name).png"))
                 try write(
-                    StatsView(model: modelWithHistory(lexicon: lexicon)),
+                    StatsView(history: modelWithHistory(lexicon: lexicon).history),
                     size: CGSize(width: 460, height: 520),
                     scheme: scheme,
                     to: directory.appendingPathComponent("stats-\(name).png"))
@@ -128,6 +138,37 @@ enum Snapshot {
         play(model.round.solutions.filter { $0.word.count == 3 }.prefix(2).map(\.word), on: model)
         model.endRound()
         return model
+    }
+
+    /// Untimed play. This mode existed in `GameSettings` from the start with no way to select
+    /// it, so the image is the evidence that choosing it now reaches the board.
+    private static func untimedModel(lexicon: Lexicon) -> GameModel {
+        let model = GameModel(
+            lexicon: lexicon,
+            settings: GameSettings(clock: .untimed, rackSizes: [7]),
+            defaults: scratchDefaults)
+        let solutions = model.round.solutions.filter(\.isCommon).sorted { $0.word < $1.word }
+        play(solutions.prefix(max(1, solutions.count / 4)).map(\.word), on: model)
+        return model
+    }
+
+    /// The menu, with a history behind it so the summary line appears.
+    private static func menuModel(lexicon: Lexicon) -> AppModel {
+        let url = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("twist-snapshot-menu-\(UUID().uuidString)/history.json")
+        let store = HistoryStore(fileURL: url)
+        try? store.save((0..<5).map { index in
+            GameRecord(
+                finishedAt: Date().addingTimeInterval(Double(index - 5) * 86_400),
+                score: [4_820, 11_240, 7_600, 16_450, 9_310][index],
+                roundsCleared: 2 + index % 3,
+                roundsCompleted: index % 2,
+                wordsFound: 20 + index * 6,
+                bingosFound: 2 + index % 3,
+                rackSizes: [6, 7],
+                wasTimed: true)
+        })
+        return AppModel(lexicon: lexicon, store: store)
     }
 
     /// Sound turned off. The icon in the image is the evidence that toggling actually

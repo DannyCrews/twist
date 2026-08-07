@@ -3,7 +3,7 @@ import TwistKit
 
 @main
 struct TwistApp: App {
-    @State private var model = GameModel(lexicon: LexiconLoader.loadBundled())
+    @State private var app = AppModel(lexicon: LexiconLoader.loadBundled())
 
     // Dark by default. The palette is built for it, and a white field behind a running clock
     // is tiring however good the colours on top of it are.
@@ -20,15 +20,15 @@ struct TwistApp: App {
 
     var body: some Scene {
         WindowGroup("Twist") {
-            GameView(model: model)
-                .frame(minWidth: 720, minHeight: 700)
+            RootView(app: app)
+                .frame(minWidth: 760, minHeight: 780)
                 .tint(Theme.accent)
                 .preferredColorScheme(appearance.colorScheme)
         }
         .windowResizability(.contentMinSize)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New Game") { model.restart() }
+                Button("New Game") { app.returnToMenu() }
                     .keyboardShortcut("n")
             }
             CommandGroup(after: .toolbar) {
@@ -41,6 +41,19 @@ struct TwistApp: App {
                     ForEach(Appearance.allCases) { Text($0.label).tag($0) }
                 }
             }
+        }
+    }
+}
+
+/// Switches between the menu and a game in progress.
+struct RootView: View {
+    @Bindable var app: AppModel
+
+    var body: some View {
+        if let game = app.game {
+            GameView(model: game, onQuit: { app.returnToMenu() })
+        } else {
+            StartView(app: app)
         }
     }
 }

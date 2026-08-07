@@ -7,6 +7,7 @@ It keeps score across sittings, shows you the words you missed, and — unlike t
 tells you nothing you can't act on.
 
 <p align="center">
+  <img src="docs/start-dark.png" alt="The start screen: clock and letter-count choices above a Start Game button" width="720">
   <img src="docs/game-dark.png" alt="A round in progress: the board shows a slot for every word in the rack, filled in as you find them" width="720">
 </p>
 
@@ -56,7 +57,16 @@ You only do this once.
 
 ## Playing
 
-Type. Letters lift out of the rack as you use them.
+It opens on a menu rather than a running clock. Two choices there:
+
+| | |
+|---|---|
+| **Clock** | **2:00** — the original's two minutes · **Untimed** — rounds end when you say so |
+| **Letters** | **6** · **7** · **Both**, mixed at random |
+
+Both are remembered between launches.
+
+Then type. Letters lift out of the rack as you use them.
 
 | Key | Does |
 |---|---|
@@ -101,6 +111,9 @@ points — but only reasonably common words count toward the round's target, so 
 stays winnable.
 
 **It remembers.** Scores, streaks, best-per-rack-size, and the last few games.
+
+**You can pause.** The original couldn't. Pausing hides the board *and* the rack, so it isn't
+a way to study the anagram with the clock stopped.
 
 **It sounds calm.** Every tone is synthesized from a single pentatonic scale, so nothing ever
 clashes. A word you got wrong is a soft low note, not a buzzer. The ten-second warning is one
