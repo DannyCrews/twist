@@ -128,6 +128,9 @@ enum Snapshot {
             defaults: scratchDefaults)
         let solutions = model.round.solutions.filter(\.isCommon).sorted { $0.word < $1.word }
         play(solutions.prefix(max(1, solutions.count / 3)).map(\.word), on: model)
+        // One rare word too. It has no slot until it is found, so it is the evidence that
+        // playing outside the target list now shows up instead of silently scoring.
+        play(model.round.solutions.filter { !$0.isCommon }.prefix(1).map(\.word), on: model)
         // Leave a few letters staged, so the input line is not empty in the image.
         for character in model.round.tiles.prefix(3) { model.type(character) }
         return model

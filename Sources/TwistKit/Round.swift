@@ -95,28 +95,31 @@ public struct Round: Sendable {
         wordScore + Scoring.bonus(forWordScore: wordScore, completed: isComplete)
     }
 
-    /// The common words grouped by length, longest group first. Within a group, the words you
-    /// have found come first in the order you found them, then the rest.
+    /// What the board shows, grouped by length, longest group first.
     ///
-    /// This is what the board shows as slots. Seeing that a rack holds four five-letter words
-    /// is most of the game's guidance, and the original showed exactly this.
+    /// Every common word — the round's targets — plus any *rare* word you have actually found.
+    /// Rare words you have not found stay hidden, so the target count is still the thing to
+    /// chase and the board does not leak answers.
     ///
-    /// The ordering is measured rather than chosen. Every slot in a group is the same width
-    /// and every unfound one renders as identical dots, so rearranging unfound slots is
-    /// invisible — only found words can be seen to move. Against 120 real racks, packing found
-    /// words to the front cut the distance the eye travels from one found word to the next by
-    /// 29% (216pt to 153pt). Keeping them in discovery order rather than re-sorting them means
-    /// a word already on the board never moves again: measured visible displacement is zero,
-    /// where re-sorting the found block alphabetically moved earlier finds by 113pt each time.
+    /// Including found rare words is not decoration. The board used to show common words only,
+    /// so playing a rare word scored, said so in the feedback line, and changed nothing you
+    /// were looking at. On a real rack that is not an edge case: `acinst` spells 27 words with
+    /// a slot and 31 without, so more than half of everything accepted vanished on entry. It
+    /// reads exactly like the word was refused.
     ///
-    /// The cost is that found words are no longer alphabetical, which would matter if you had
-    /// to scan the board to check whether you had already played something. You do not —
-    /// submitting a duplicate says so.
-    public var commonWordsByLength: [(length: Int, words: [LexiconEntry])] {
+    /// Within a group the words you have found come first, in the order you found them, then
+    /// the rest alphabetically. That ordering is measured: every slot in a group is the same
+    /// width and every unfound one renders as identical dots, so moving unfound slots is
+    /// invisible and only found words can be seen to move. Across 120 real racks, leading with
+    /// found words cut the distance the eye travels from one found word to the next by 29%
+    /// (216pt to 153pt), and keeping discovery order rather than re-sorting holds visible
+    /// displacement at zero — re-sorting alphabetically moved earlier finds 113pt each time.
+    public var boardWordsByLength: [(length: Int, words: [LexiconEntry])] {
         let discoveryRank = Dictionary(
             uniqueKeysWithValues: foundWords.enumerated().map { ($0.element, $0.offset) })
+        let visible = solutions.filter { $0.isCommon || found.contains($0.word) }
 
-        return Dictionary(grouping: solutions.filter(\.isCommon)) { $0.word.count }
+        return Dictionary(grouping: visible) { $0.word.count }
             .sorted { $0.key > $1.key }
             .map { length, words in
                 let sorted = words.sorted { left, right in

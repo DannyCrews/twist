@@ -21,9 +21,14 @@ struct GameView: View {
                 VStack(spacing: 0) {
                     WordBoard(model: model)
                     Divider()
-                    Spacer(minLength: 0)
-                    PlayArea(model: model)
-                    Spacer(minLength: 0)
+                    // All remaining height falls below the entry block rather than above it,
+                    // so the rack sits close to the words being read — and the panel colour
+                    // runs to the window edge rather than leaving a stripe of background.
+                    VStack(spacing: 0) {
+                        PlayArea(model: model)
+                        Spacer(minLength: 0)
+                    }
+                    .background(Theme.surface)
                 }
                 PausedCurtain(model: model)
             }
@@ -200,7 +205,7 @@ private struct WordBoard: View {
     var body: some View {
         ScrollIfNeeded {
             VStack(alignment: .leading, spacing: 16) {
-            ForEach(model.round.commonWordsByLength, id: \.length) { group in
+            ForEach(model.round.boardWordsByLength, id: \.length) { group in
                 VStack(alignment: .leading, spacing: 7) {
                     Text("^[\(group.length) letter](inflect: true)")
                         .font(.caption.weight(.semibold))
@@ -210,13 +215,13 @@ private struct WordBoard: View {
                         ForEach(group.words, id: \.word) { entry in
                             WordSlot(
                                 word: entry.word,
-                                isFound: model.round.hasFound(entry.word)
+                                isFound: model.round.hasFound(entry.word),
+                                isBonus: !entry.isCommon
                             )
                         }
                     }
                 }
             }
-                Spacer(minLength: 0)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 18)
@@ -229,6 +234,8 @@ private struct WordBoard: View {
 private struct WordSlot: View {
     let word: String
     let isFound: Bool
+    /// A word that was never one of the round's targets — it only appears once found.
+    var isBonus = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -242,9 +249,16 @@ private struct WordSlot: View {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(isFound ? Theme.accentSoft : Theme.slot)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(isBonus ? Theme.accent.opacity(0.75) : .clear, lineWidth: 1.5)
+            )
             .scaleEffect(isFound ? 1 : 0.97)
             .animation(reduceMotion ? nil : .snappy(duration: 0.24, extraBounce: 0.08), value: isFound)
-            .accessibilityLabel(isFound ? word : "unfound \(word.count) letter word")
+            .accessibilityLabel(
+                isFound
+                    ? (isBonus ? "\(word), bonus word" : word)
+                    : "unfound \(word.count) letter word")
     }
 }
 

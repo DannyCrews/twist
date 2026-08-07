@@ -146,7 +146,7 @@ private func makeRound() -> Round {
 @Test func foundWordsLeadTheirGroupInDiscoveryOrder() {
     var round = makeRound()
     // Board starts fully unfound: plain alphabetical within each length group.
-    let fiveLetters = { round.commonWordsByLength.first { $0.length == 5 }?.words.map(\.word) }
+    let fiveLetters = { round.boardWordsByLength.first { $0.length == 5 }?.words.map(\.word) }
     #expect(fiveLetters() == ["steam", "tears"])
 
     // "tears" is alphabetically second but found first, so it leads.
@@ -160,9 +160,9 @@ private func makeRound() -> Round {
 
 @Test func orderingNeverAddsOrLosesWords() {
     var round = makeRound()
-    let before = Set(round.commonWordsByLength.flatMap { $0.words.map(\.word) })
+    let before = Set(round.boardWordsByLength.flatMap { $0.words.map(\.word) })
     for word in ["sea", "stream", "tears"] { round.submit(word) }
-    let after = round.commonWordsByLength
+    let after = round.boardWordsByLength
     #expect(Set(after.flatMap { $0.words.map(\.word) }) == before)
     // Groups stay longest-first, and each group holds one length.
     #expect(after.map(\.length) == after.map(\.length).sorted(by: >))

@@ -128,27 +128,56 @@ final class SoundEngine {
         // high, almost-subliminal tick.
         buffers["tile"] = render(notes: [Note(frequency: 1174.66, start: 0, duration: 0.09, gain: 0.10)])
 
-        // One tone for a good word, whatever its length.
+        // Success: a chime. One strike, bell partials.
         //
-        // This used to climb the scale with word length, which sounded expressive and was a
-        // mistake: every one of those five pitches meant the same thing — correct — so the
-        // variation carried nothing you could act on. What it did do was make the sound
-        // ambiguous enough that you looked at the screen to check, which is exactly what an
-        // audio cue exists to save you from. One tone up here, one low tone for a rejection,
-        // and you never have to look.
+        // The ratios are a struck metal bar's, not a harmonic series — 2.76 and 5.4 are what
+        // make it read as a bell rather than a flute. The fundamental decays slowly while the
+        // upper partials fall away fast, which is the shimmer.
+        //
+        // One sound for every accepted word, whatever its length. This used to climb the scale
+        // with word length, which sounded expressive and was a mistake: all five pitches meant
+        // the same thing, so the variation carried nothing actionable while making the cue
+        // ambiguous enough that you looked at the screen to check — the exact work an audio cue
+        // exists to save.
         buffers["word"] = render(notes: [
-            Note(frequency: Self.scale[3], start: 0, duration: 0.45, gain: 0.5)
+            Note(
+                frequency: 880.00, start: 0, duration: 0.85, gain: 0.42, attack: 0.006,
+                partials: [
+                    (1.00, 1.00, 0.6), (2.76, 0.42, 2.2),
+                    (5.40, 0.16, 3.4), (8.93, 0.06, 4.6),
+                ])
         ])
 
-        // The full-rack word: a rising three-note figure, the one genuinely celebratory sound.
+        // The full-rack word: three bell strikes rising. Always also a success, so it never
+        // makes "was I right?" ambiguous — it marks a different event, not a different degree
+        // of correctness.
+        let bell: [(ratio: Double, gain: Double, decay: Double)] = [
+            (1.00, 1.00, 0.6), (2.76, 0.38, 2.2), (5.40, 0.12, 3.4),
+        ]
         buffers["bingo"] = render(notes: [
-            Note(frequency: Self.scale[0], start: 0.00, duration: 0.55, gain: 0.45),
-            Note(frequency: Self.scale[2], start: 0.09, duration: 0.55, gain: 0.45),
-            Note(frequency: Self.scale[4], start: 0.18, duration: 0.75, gain: 0.50),
+            Note(frequency: 659.25, start: 0.00, duration: 0.9, gain: 0.34,
+                 attack: 0.006, partials: bell),
+            Note(frequency: 880.00, start: 0.11, duration: 0.9, gain: 0.34,
+                 attack: 0.006, partials: bell),
+            Note(frequency: 1046.50, start: 0.22, duration: 1.1, gain: 0.38,
+                 attack: 0.006, partials: bell),
         ])
 
-        // Not a buzzer: one low, quiet, quickly-gone note.
-        buffers["reject"] = render(notes: [Note(frequency: 261.63, start: 0, duration: 0.18, gain: 0.22)])
+        // Failure: a soft gong. Low, slow to speak, long to fade.
+        //
+        // Inharmonic partials again, spaced the way a struck plate rings. Kept at G3 rather
+        // than anything lower because laptop speakers roll off below roughly 200 Hz and ears
+        // discount low frequencies anyway — a truly low gong would simply not arrive.
+        //
+        // Still not a buzzer. It should land as "not that one", not as a reprimand.
+        buffers["reject"] = render(notes: [
+            Note(
+                frequency: 196.00, start: 0, duration: 1.1, gain: 0.17, attack: 0.05,
+                partials: [
+                    (1.00, 1.00, 0.5), (1.48, 0.55, 1.4), (2.13, 0.34, 2.0),
+                    (2.87, 0.20, 2.8), (3.76, 0.10, 3.6),
+                ])
+        ])
 
         // Twisting is airy — two soft notes a fifth apart, felt more than heard.
         buffers["twist"] = render(notes: [
@@ -175,11 +204,21 @@ final class SoundEngine {
         buffers["timeLow"] = render(notes: [Note(frequency: 392.00, start: 0, duration: 0.5, gain: 0.30)])
     }
 
+    /// One struck sound. `partials` are frequency ratios against the fundamental, each with a
+    /// gain and a decay exponent — a higher exponent fades faster.
+    ///
+    /// Ratios rather than harmonics because bells and gongs are not harmonic. A struck metal
+    /// body rings at frequencies that are not integer multiples of anything, and that
+    /// inharmonicity *is* the sound; forcing 2x and 3x gives an organ, not a chime.
     private struct Note {
         let frequency: Double
         let start: Double
         let duration: Double
         let gain: Double
+        var attack: Double = 0.14
+        var partials: [(ratio: Double, gain: Double, decay: Double)] = [
+            (1.0, 1.00, 0), (2.0, 0.28, 2), (3.0, 0.10, 3),
+        ]
     }
 
     private func render(notes: [Note]) -> AVAudioPCMBuffer? {
@@ -191,31 +230,32 @@ final class SoundEngine {
             let samples = buffer.floatChannelData?[0]
         else { return nil }
         buffer.frameLength = frameCount
-
         for index in 0..<Int(frameCount) { samples[index] = 0 }
 
         for note in notes {
             let firstFrame = Int(note.start * sampleRate)
             let noteFrames = Int(note.duration * sampleRate)
-            let angular = 2 * Double.pi * note.frequency / sampleRate
 
             for offset in 0..<noteFrames {
                 let frame = firstFrame + offset
                 guard frame < Int(frameCount) else { break }
                 let progress = Double(offset) / Double(noteFrames)
-                let phase = angular * Double(offset)
 
-                // Harmonics decay faster than the fundamental, which is what makes a struck
-                // bar sound like wood rather than an organ.
-                let fundamental = sin(phase)
-                let second = 0.28 * sin(2 * phase) * pow(1 - progress, 2)
-                let third = 0.10 * sin(3 * phase) * pow(1 - progress, 3)
-
-                samples[frame] += Float((fundamental + second + third) * envelope(at: progress, frames: noteFrames) * note.gain)
+                var value = 0.0
+                for partial in note.partials {
+                    let phase =
+                        2 * Double.pi * note.frequency * partial.ratio / sampleRate
+                        * Double(offset)
+                    let fade = partial.decay > 0 ? pow(1 - progress, partial.decay) : 1
+                    value += partial.gain * sin(phase) * fade
+                }
+                samples[frame] += Float(
+                    value * envelope(at: progress, frames: noteFrames, attack: note.attack)
+                        * note.gain)
             }
         }
 
-        // Guard against summed notes clipping.
+        // Guard against summed partials clipping.
         var peak: Float = 0
         for index in 0..<Int(frameCount) { peak = max(peak, abs(samples[index])) }
         if peak > 0.95 {
@@ -227,8 +267,8 @@ final class SoundEngine {
 
     /// Raised-cosine attack into an exponential release. The attack matters most: a hard onset
     /// is heard as a click no matter how gentle the tone behind it.
-    private func envelope(at progress: Double, frames: Int) -> Double {
-        let attack = min(0.14, 480.0 / Double(frames))
+    private func envelope(at progress: Double, frames: Int, attack requested: Double) -> Double {
+        let attack = min(requested, max(0.002, 480.0 / Double(frames)))
         if progress < attack {
             return 0.5 * (1 - cos(.pi * progress / attack))
         }
