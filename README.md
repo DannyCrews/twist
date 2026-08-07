@@ -32,42 +32,49 @@ means.
 
 **Requires macOS 15 (Sequoia) or later, on Apple Silicon.**
 
-### The easy way — build it yourself
-
-This sounds harder than it is, and it is genuinely the least friction: an app you build on your
-own Mac isn't quarantined, so it opens without macOS complaining at you.
-
-You need Apple's **Command Line Tools**. Most Macs already have them; if not, run
-`xcode-select --install` first and let it finish (about 1 GB, a few minutes). **Full Xcode is
-not required.**
+Open **Terminal** (press ⌘-Space, type `Terminal`, press Return) and paste this:
 
 ```bash
-git clone https://github.com/DannyCrews/twist.git
-cd twist
-make app
-open build/Twist.app
+git clone https://github.com/DannyCrews/twist.git && cd twist && make play
 ```
 
-Drag `build/Twist.app` into your Applications folder to keep it.
+That's it. It builds the game — about a minute the first time — and opens it.
 
-### If someone sent you the app
+To keep it in your Applications folder, use `make install` instead of `make play`.
 
-macOS will refuse to open it, and the message it shows — "damaged", or "cannot be opened" — is
-misleading. It means *unsigned*, not broken. Making an app open cleanly on someone else's Mac
-requires a paid Apple Developer account, which this project doesn't have.
+### If it asks to install developer tools
 
-To open it anyway:
+The first time, macOS may show a dialog saying the `git` command requires the **command line
+developer tools**. Click **Install**, let it finish — about 1 GB and a few minutes — then paste
+the same line again.
 
-1. Move **Twist.app** to your Applications folder.
-2. Double-click it. macOS blocks it. Dismiss the dialog.
-3. Open **System Settings → Privacy & Security**.
-4. Scroll to the bottom. There's a line about Twist being blocked, and an **Open Anyway** button.
-5. Click it, enter your password, then open Twist again.
+That is Apple's own installer, and it is the only prerequisite. `git`, `make` and the Swift
+compiler all come from that one package, so installing it once covers everything. **Full Xcode
+is not required.**
 
-You only do this once.
+### Without git
 
-> On macOS 14 (Sonoma) and earlier this was a Control-click → **Open** on the app itself. Apple
-> removed that shortcut in Sequoia, which is why it's now a trip through Settings.
+If you would rather not clone, GitHub can hand you a zip instead:
+
+1. Go to **[the repository](https://github.com/DannyCrews/twist)**.
+2. Click the green **Code** button, then **Download ZIP**.
+3. Double-click the zip to unpack it.
+4. Open Terminal, type `cd ` (with the space), drag the unpacked folder onto the Terminal
+   window, and press Return.
+5. Type `make play` and press Return.
+
+macOS marks downloaded files as quarantined, but that flag does not carry into the app you
+build — the compiler writes a new file — so the result opens with no warning either way.
+
+### Why not just send the finished app?
+
+Because macOS would block it. An app arriving by AirDrop, email or download is flagged as
+quarantined, and Gatekeeper refuses to open anything unsigned carrying that flag. Getting past
+it means a trip through **System Settings → Privacy & Security → Open Anyway**, or a paid Apple
+Developer account to sign the app properly.
+
+An app you build on your own Mac was never downloaded, so it is never flagged, and it simply
+opens. Same app, same code — the only difference is how it arrived.
 
 ---
 
@@ -277,7 +284,8 @@ tightest pairing measures 4.8:1 against a 4.5 floor.
 ## Troubleshooting
 
 **"Twist.app is damaged and can't be opened."**
-It isn't damaged, it's unsigned. See [If someone sent you the app](#if-someone-sent-you-the-app).
+It isn't damaged, it's unsigned. You were sent the built app rather than building it
+yourself — see [Why not just send the finished app?](#why-not-just-send-the-finished-app).
 
 **Nothing happens when I click a word on the review screen.**
 That word has no entry in your Mac's dictionary, so there's nothing to show. Words that do have

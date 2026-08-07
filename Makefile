@@ -24,7 +24,47 @@ TESTFLAGS := -Xswiftc -F -Xswiftc $(FRAMEWORKS) \
              -Xlinker -rpath -Xlinker $(FRAMEWORKS) \
              -Xlinker -rpath -Xlinker $(LIBS)
 
-.PHONY: build test run dict clean
+.PHONY: build test run dict clean play install app check snapshots sounds preflight
+
+# The whole point of `make play`: clone, one command, the game opens. Anything that could stop
+# that is checked first, and reported as an instruction rather than a compiler error.
+preflight:
+	@command -v swift >/dev/null 2>&1 || { \
+		echo ""; \
+		echo "Swift is not available yet — Twist needs Apple's Command Line Tools."; \
+		echo ""; \
+		echo "  Run this, let it finish, then try again:"; \
+		echo ""; \
+		echo "      xcode-select --install"; \
+		echo ""; \
+		echo "  About 1 GB, a few minutes. Full Xcode is not required."; \
+		echo ""; \
+		exit 1; \
+	}
+	@swift build --help >/dev/null 2>&1 || { \
+		echo ""; \
+		echo "Swift is installed but cannot build. Usually the developer directory is unset:"; \
+		echo ""; \
+		echo "      sudo xcode-select --switch /Library/Developer/CommandLineTools"; \
+		echo ""; \
+		exit 1; \
+	}
+
+# Build it and open it. This is the one to point a new player at.
+play: preflight
+	@echo "Building Twist — about a minute the first time…"
+	@Scripts/bundle.sh
+	@echo "Opening Twist."
+	@open build/Twist.app
+
+# Same, but keep it: copies into /Applications so it is there next time.
+install: preflight
+	@echo "Building Twist — about a minute the first time…"
+	@Scripts/bundle.sh
+	@rm -rf /Applications/Twist.app
+	@cp -R build/Twist.app /Applications/Twist.app
+	@echo "Installed to /Applications/Twist.app"
+	@open /Applications/Twist.app
 
 build:
 	swift build
