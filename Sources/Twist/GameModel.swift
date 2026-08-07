@@ -196,10 +196,11 @@ final class GameModel {
 
     /// Shuffles the rack. Staged letters are returned to it first — their indices would
     /// otherwise point at different tiles.
+    /// Twisting rearranges what is left in the rack. It does not take back what you have
+    /// already typed — the staged letters keep their identity and follow to their new positions.
     func twist() {
         guard !isPaused else { return }
-        typedTileIndices.removeAll()
-        session.twist()
+        typedTileIndices = session.twist(holding: typedTileIndices)
         feedback = .none
         sound.play(.twist)
     }

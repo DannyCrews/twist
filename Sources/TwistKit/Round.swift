@@ -61,14 +61,35 @@ public struct Round: Sendable {
     }
 
     /// Rearranges the rack. The original's one and only aid, and still the good one.
-    public mutating func twist(using generator: inout some RandomNumberGenerator) {
-        guard tiles.count > 1 else { return }
-        let previous = tiles
-        // A twist that changes nothing reads as a broken button.
-        for _ in 0..<8 {
-            tiles.shuffle(using: &generator)
-            if tiles != previous { return }
+    ///
+    /// `held` is the rack positions of letters already staged in the word being typed, in the
+    /// order they were typed. Those letters are not shuffled and not given up: twisting to
+    /// rearrange what is left should never cost you the letters you had already committed to.
+    /// They move to the end of the rack so the letters still available pack to the left and the
+    /// gaps trail behind them, which reads far better than holes scattered through the row.
+    ///
+    /// Returns the held letters' new positions, in the same order they were passed, so the
+    /// caller's staged-index list stays pointing at the same letters.
+    @discardableResult
+    public mutating func twist(
+        holding held: [Int] = [],
+        using generator: inout some RandomNumberGenerator
+    ) -> [Int] {
+        let heldSet = Set(held.filter(tiles.indices.contains))
+        let heldLetters = held.filter(tiles.indices.contains).map { tiles[$0] }
+        var free = tiles.enumerated().filter { !heldSet.contains($0.offset) }.map(\.element)
+
+        if free.count > 1 {
+            let previous = free
+            // A twist that changes nothing reads as a broken button.
+            for _ in 0..<8 {
+                free.shuffle(using: &generator)
+                if free != previous { break }
+            }
         }
+
+        tiles = free + heldLetters
+        return Array(free.count..<tiles.count)
     }
 
     // MARK: - Progress

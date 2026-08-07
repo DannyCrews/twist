@@ -66,6 +66,11 @@ enum Snapshot {
                     scheme: scheme,
                     to: directory.appendingPathComponent("review-\(name).png"))
                 try write(
+                    GameView(model: twistedModel(lexicon: lexicon)),
+                    size: CGSize(width: 760, height: 860),
+                    scheme: scheme,
+                    to: directory.appendingPathComponent("twisted-\(name).png"))
+                try write(
                     GameView(model: unstagedModel(lexicon: lexicon)),
                     size: CGSize(width: 760, height: 860),
                     scheme: scheme,
@@ -145,6 +150,20 @@ enum Snapshot {
             defaults: scratchDefaults)
         play(model.round.solutions.filter { $0.word.count == 3 }.prefix(2).map(\.word), on: model)
         model.endRound()
+        return model
+    }
+
+    /// Three letters staged, then twisted.
+    ///
+    /// Twisting used to hand the staged letters back to the rack, because shuffling invalidated
+    /// the indices they were tracked by. The image is the evidence: the input line should still
+    /// hold three letters, and the rack should show what is left packed to the left with the
+    /// gaps trailing.
+    private static func twistedModel(lexicon: Lexicon) -> GameModel {
+        let model = playedModel(lexicon: lexicon)
+        model.clear()
+        for character in model.round.tiles.prefix(3) { model.type(character) }
+        model.twist()
         return model
     }
 

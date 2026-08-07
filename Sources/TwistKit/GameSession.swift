@@ -100,9 +100,11 @@ public struct GameSession: Sendable {
         return round.submit(word)
     }
 
-    public mutating func twist() {
-        guard state == .playing else { return }
-        round.twist(using: &generator)
+    /// Returns the new rack positions of the held letters; empty if the round is not running.
+    @discardableResult
+    public mutating func twist(holding held: [Int] = []) -> [Int] {
+        guard state == .playing else { return [] }
+        return round.twist(holding: held, using: &generator)
     }
 
     /// Ends the round, whether the clock ran out or the player chose to move on.

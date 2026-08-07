@@ -117,6 +117,42 @@ private func makeRound() -> Round {
     #expect(round.missedWords.map(\.word) == ["master", "steam", "tears", "rest"])
 }
 
+@Test func twistKeepsStagedLettersAndPacksTheRestLeft() {
+    var round = makeRound()
+    var generator = SeededGenerator(seed: 4)
+
+    // Stage the letters at positions 1 and 3, in that order.
+    let held = [1, 3]
+    let heldLetters = held.map { round.tiles[$0] }
+    let freeLetters = round.tiles.enumerated()
+        .filter { !held.contains($0.offset) }.map(\.element).sorted()
+
+    let newPositions = round.twist(holding: held, using: &generator)
+
+    // The staged letters are still staged, still the same letters, still in typed order.
+    #expect(newPositions.count == held.count)
+    #expect(newPositions.map { round.tiles[$0] } == heldLetters)
+
+    // They sit at the end, so what is left to use packs to the left with the gaps trailing.
+    #expect(newPositions == Array((round.tiles.count - held.count)..<round.tiles.count))
+
+    // Nothing was gained or lost, and the free letters are the ones that moved.
+    #expect(round.tiles.sorted() == Array("aemrst"))
+    let free = round.tiles.prefix(round.tiles.count - held.count).sorted()
+    #expect(Array(free) == freeLetters)
+}
+
+@Test func twistWithEveryLetterStagedIsHarmless() {
+    var round = makeRound()
+    var generator = SeededGenerator(seed: 5)
+    let all = Array(round.tiles.indices)
+    let before = round.tiles
+
+    let positions = round.twist(holding: all, using: &generator)
+    #expect(positions == all)
+    #expect(round.tiles == before)
+}
+
 @Test func twistChangesTheVisibleOrderAndNothingElse() {
     var round = makeRound()
     var generator = SeededGenerator(seed: 99)
