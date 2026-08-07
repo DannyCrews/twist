@@ -334,30 +334,21 @@ private struct Rack: View {
     }
 }
 
-/// Twist and Enter, sitting directly beneath the rack.
-///
-/// Offset right of the rack's centre rather than centred on it. The input line fills
-/// left-to-right, so when a word is finished both eye and pointer are already right of centre;
-/// putting the action there shortens the travel to reach it. Enter sits rightmost as the
-/// primary action, which is also the macOS convention.
+/// Enter and Twist, centred directly beneath the rack.
 private struct PrimaryActions: View {
     let model: GameModel
 
     var body: some View {
         HStack(spacing: 12) {
-            Button("Twist") { model.twist() }
-                .buttonStyle(PrimaryButtonStyle())
-                .help("Shuffle the rack (Space)")
             Button("Enter") { model.submit() }
                 .buttonStyle(PrimaryButtonStyle(isProminent: true))
                 .keyboardShortcut(.defaultAction)
                 .help("Submit the word (Return)")
+            Button("Twist") { model.twist() }
+                .buttonStyle(PrimaryButtonStyle())
+                .help("Shuffle the rack (Space)")
         }
         .pointerStyle(.link)
-        // Leading padding on a full-width container shifts the centred content right by half
-        // the padding — layout-safe, unlike .offset, which would not reserve the space.
-        .frame(maxWidth: .infinity)
-        .padding(.leading, 130)
     }
 }
 
@@ -381,11 +372,12 @@ private struct UtilityBar: View {
 
             Spacer()
 
-            Toggle(isOn: Binding(get: { model.isSoundEnabled }, set: { model.isSoundEnabled = $0 })) {
+            Button {
+                model.isSoundEnabled.toggle()
+            } label: {
                 Image(systemName: model.isSoundEnabled ? "speaker.wave.2" : "speaker.slash")
-                    .frame(width: 22, height: 22)
             }
-            .toggleStyle(.button)
+            .buttonStyle(IconButtonStyle())
             .help(model.isSoundEnabled ? "Mute" : "Unmute")
             .accessibilityLabel("Sound")
 
@@ -396,8 +388,8 @@ private struct UtilityBar: View {
                 appearance = isDark ? .light : .dark
             } label: {
                 Image(systemName: isDark ? "sun.max" : "moon")
-                    .frame(width: 22, height: 22)
             }
+            .buttonStyle(IconButtonStyle())
             .help(isDark ? "Switch to light" : "Switch to dark")
             .accessibilityLabel(isDark ? "Switch to light appearance" : "Switch to dark appearance")
 

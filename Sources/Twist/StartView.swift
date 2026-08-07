@@ -86,8 +86,8 @@ struct StartView: View {
                     appearance = colorScheme == .dark ? .light : .dark
                 } label: {
                     Image(systemName: colorScheme == .dark ? "sun.max" : "moon")
-                        .frame(width: 22, height: 22)
                 }
+                .buttonStyle(IconButtonStyle())
                 .help(colorScheme == .dark ? "Switch to light" : "Switch to dark")
                 .accessibilityLabel("Appearance")
             }

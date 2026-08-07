@@ -108,7 +108,28 @@ struct PrimaryButtonStyle: ButtonStyle {
             // in dark, so it holds in both without a per-scheme special case.
             .foregroundStyle(isProminent ? Theme.background : Theme.textPrimary)
             .background(shape.fill(isProminent ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.tile)))
-            .overlay(shape.strokeBorder(isProminent ? Color.clear : Theme.hairline, lineWidth: 1))
+            .overlay(shape.strokeBorder(isProminent ? Color.clear : Theme.controlBorder, lineWidth: 1))
+            .contentShape(shape)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.snappy(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+
+/// The square icon toggles — sound, and light/dark.
+///
+/// Carries the same visible edge as Twist. Sound is bordered alongside the appearance toggle
+/// rather than left bare: they are the same kind of control sitting next to each other, and
+/// outlining one of a matched pair reads as a mistake.
+struct IconButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
+        return configuration.label
+            .font(.body)
+            .frame(width: 52, height: 44)
+            .foregroundStyle(Theme.textPrimary)
+            .background(shape.fill(Theme.tile))
+            .overlay(shape.strokeBorder(Theme.controlBorder, lineWidth: 1))
             .contentShape(shape)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.snappy(duration: 0.12), value: configuration.isPressed)

@@ -46,6 +46,10 @@ enum Theme {
 
     static let hairline = dynamic(light: 0xE0D6F2, dark: 0x2C2340)
 
+    /// Border for buttons, as opposed to the tile grid. Stronger than `hairline`, which is
+    /// close enough to the tile fill in light mode that a bordered button reads as edgeless.
+    static let controlBorder = dynamic(light: 0xC0ACE6, dark: 0x483A63)
+
     /// Positive feedback. A green that belongs to this palette rather than the system's.
     static let positive = dynamic(light: 0x2E7D57, dark: 0x6FD9A6)
 
