@@ -36,12 +36,17 @@ struct TileView: View {
             .fill(fill)
             .overlay {
                 RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .strokeBorder(.separator.opacity(isHovering ? 0.9 : 0.35), lineWidth: 1)
+                    .strokeBorder(
+                        isHovering ? Theme.accent.opacity(0.55) : Theme.hairline,
+                        lineWidth: 1)
             }
             .overlay {
                 Text(letter.map { String($0).uppercased() } ?? "")
                     .font(.system(size: role == .rack ? 30 : 24, weight: .heavy, design: .rounded))
-                    .foregroundStyle(role == .staged ? AnyShapeStyle(.clear) : AnyShapeStyle(.primary))
+                    .foregroundStyle(
+                        role == .staged
+                            ? AnyShapeStyle(.clear)
+                            : AnyShapeStyle(role == .entry ? Theme.accent : Theme.textPrimary))
             }
             .frame(width: size.width, height: size.height)
             // The whole rectangle is the target, not just the letter inside it.
@@ -71,14 +76,10 @@ struct TileView: View {
 
     private var fill: AnyShapeStyle {
         switch role {
-        case .rack:
-            isHovering ? AnyShapeStyle(.fill.secondary) : AnyShapeStyle(.fill.tertiary)
-        case .staged:
-            AnyShapeStyle(.fill.quinary)
-        case .entry:
-            AnyShapeStyle(.tint.opacity(0.18))
-        case .empty:
-            AnyShapeStyle(.fill.quinary)
+        case .rack: AnyShapeStyle(isHovering ? Theme.tileHover : Theme.tile)
+        case .staged: AnyShapeStyle(Theme.slot)
+        case .entry: AnyShapeStyle(Theme.accentSoft)
+        case .empty: AnyShapeStyle(Theme.slot)
         }
     }
 

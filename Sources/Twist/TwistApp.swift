@@ -5,6 +5,10 @@ import TwistKit
 struct TwistApp: App {
     @State private var model = GameModel(lexicon: LexiconLoader.loadBundled())
 
+    // Dark by default. The palette is built for it, and a white field behind a running clock
+    // is tiring however good the colours on top of it are.
+    @AppStorage("Appearance") private var appearance: Appearance = .dark
+
     init() {
         if let directory = Snapshot.requestedDirectory {
             Snapshot.run(into: directory)
@@ -18,6 +22,8 @@ struct TwistApp: App {
         WindowGroup("Twist") {
             GameView(model: model)
                 .frame(minWidth: 720, minHeight: 700)
+                .tint(Theme.accent)
+                .preferredColorScheme(appearance.colorScheme)
         }
         .windowResizability(.contentMinSize)
         .commands {
@@ -30,6 +36,10 @@ struct TwistApp: App {
                     NotificationCenter.default.post(name: .showStatistics, object: nil)
                 }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
+
+                Picker("Appearance", selection: $appearance) {
+                    ForEach(Appearance.allCases) { Text($0.label).tag($0) }
+                }
             }
         }
     }

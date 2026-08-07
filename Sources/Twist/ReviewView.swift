@@ -18,7 +18,9 @@ struct ReviewView: View {
             Divider()
             footer
         }
+        .foregroundStyle(Theme.textPrimary)
         .frame(width: 520, height: 560)
+        .background(Theme.background)
     }
 
     private var header: some View {
@@ -28,7 +30,7 @@ struct ReviewView: View {
             Text(model.round.puzzle.rack.letters.uppercased())
                 .font(.system(size: 15, weight: .bold, design: .monospaced))
                 .tracking(4)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.accent)
 
             if let summary {
                 HStack(spacing: 24) {
@@ -58,7 +60,7 @@ struct ReviewView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("^[\(summary.missedWords.count) word](inflect: true) you missed")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
                     .padding(.horizontal, 24)
                     .padding(.top, 16)
 
@@ -69,7 +71,7 @@ struct ReviewView: View {
                                 .font(.system(size: 14, weight: .medium, design: .monospaced))
                                 .padding(.vertical, 5)
                                 .padding(.horizontal, 8)
-                                .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.4)))
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Theme.slot))
                         }
                     }
                     .padding(.horizontal, 24)
@@ -81,9 +83,9 @@ struct ReviewView: View {
             VStack(spacing: 8) {
                 Image(systemName: "checkmark.circle")
                     .font(.system(size: 36))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.positive)
                 Text("Nothing left on the board.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -99,7 +101,7 @@ struct ReviewView: View {
             } else {
                 Text("A word using every letter is needed to go on.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
         .controlSize(.large)
@@ -122,7 +124,7 @@ private struct Stat: View {
                 .font(.title3.weight(.semibold).monospacedDigit())
             Text(label)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
         }
         .accessibilityElement(children: .combine)
     }

@@ -24,7 +24,7 @@ struct GameOverView: View {
                 let isBest = lastGame.map { $0.score >= best } ?? false
                 Text(isBest ? "Your best yet" : "Best \(best.formatted())")
                     .font(.callout)
-                    .foregroundStyle(isBest ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+                    .foregroundStyle(isBest ? Theme.accent : Theme.textSecondary)
             }
 
             StatsGrid(statistics: model.statistics, history: model.history)
@@ -36,7 +36,9 @@ struct GameOverView: View {
                 .padding(.top, 4)
         }
         .padding(32)
+        .foregroundStyle(Theme.textPrimary)
         .frame(width: 480)
+        .background(Theme.background)
     }
 }
 
@@ -54,9 +56,9 @@ struct StatsView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "chart.bar")
                         .font(.system(size: 34))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                     Text("Finish a game and it will show up here.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxHeight: .infinity)
             } else {
@@ -68,7 +70,9 @@ struct StatsView: View {
                 .keyboardShortcut(.defaultAction)
         }
         .padding(28)
+        .foregroundStyle(Theme.textPrimary)
         .frame(width: 460, height: 520)
+        .background(Theme.background)
     }
 }
 
@@ -121,7 +125,7 @@ private struct StatsGrid: View {
                     .font(.title3.weight(.semibold).monospacedDigit())
                 Text(label)
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
@@ -138,16 +142,16 @@ private struct RecentGames: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Recent games")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
 
             ScrollIfNeeded {
                 VStack(spacing: 0) {
                     ForEach(recent) { record in
                         HStack {
                             Text(record.finishedAt, format: .dateTime.month().day())
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.textSecondary)
                             Text("^[\(record.roundsCleared) round](inflect: true)")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.textSecondary)
                             Spacer()
                             Text(record.score, format: .number)
                                 .monospacedDigit()

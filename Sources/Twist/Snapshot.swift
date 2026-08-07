@@ -149,9 +149,11 @@ enum Snapshot {
         let renderer = ImageRenderer(
             content: view
                 .frame(width: size.width, height: size.height)
+                // Must match TwistApp, or the snapshots verify a different-looking app.
+                .tint(Theme.accent)
                 .environment(\.isSnapshotting, true)
                 .environment(\.colorScheme, scheme)
-                .background(scheme == .dark ? Color.black : Color.white)
+                .background(Theme.background)
         )
         renderer.scale = 2
 

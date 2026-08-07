@@ -15,7 +15,7 @@ struct GameView: View {
             Divider()
             PlayArea(model: model)
         }
-        .background(.background)
+        .background(Theme.background)
         // The whole window is the keyboard target — there is no text field to lose focus to.
         .focusable()
         .focusEffectDisabled()
@@ -75,7 +75,7 @@ private struct ScoreBar: View {
                 .font(.caption.weight(.medium))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 2)
-                .background(.quaternary, in: Capsule())
+                .background(Theme.accentSoft, in: Capsule())
 
             Spacer()
 
@@ -95,8 +95,10 @@ private struct ScoreBar: View {
                 .accessibilityLabel("Score")
         }
         .font(.callout)
+        .foregroundStyle(Theme.textPrimary)
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
+        .background(Theme.surface)
     }
 }
 
@@ -113,7 +115,7 @@ private struct TimerLabel: View {
             Image(systemName: "timer")
         }
         .font(.callout.weight(isUrgent ? .bold : .regular))
-        .foregroundStyle(isUrgent ? AnyShapeStyle(.red) : AnyShapeStyle(.primary))
+        .foregroundStyle(isUrgent ? Theme.urgent : Theme.textPrimary)
         .accessibilityLabel("\(seconds) seconds remaining")
     }
 }
@@ -133,7 +135,7 @@ private struct WordBoard: View {
                 VStack(alignment: .leading, spacing: 7) {
                     Text("^[\(group.length) letter](inflect: true)")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
 
                     FlowLayout(spacing: 7, lineSpacing: 7) {
                         ForEach(group.words, id: \.word) { entry in
@@ -162,12 +164,12 @@ private struct WordSlot: View {
     var body: some View {
         Text(isFound ? word.uppercased() : String(repeating: "·", count: word.count))
             .font(.system(size: 15, weight: .semibold, design: .monospaced))
-            .foregroundStyle(isFound ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
+            .foregroundStyle(isFound ? Theme.accent : Theme.textFaint)
             .padding(.vertical, 5)
             .padding(.horizontal, 9)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(isFound ? AnyShapeStyle(.tint.opacity(0.15)) : AnyShapeStyle(.quaternary.opacity(0.5)))
+                    .fill(isFound ? Theme.accentSoft : Theme.slot)
             )
             .scaleEffect(isFound ? 1 : 0.97)
             .animation(reduceMotion ? nil : .snappy(duration: 0.28, extraBounce: 0.2), value: isFound)
@@ -189,6 +191,8 @@ private struct PlayArea: View {
             Controls(model: model)
         }
         .padding(20)
+        .frame(maxWidth: .infinity)
+        .background(Theme.surface)
     }
 }
 
@@ -202,11 +206,11 @@ private struct FeedbackLine: View {
                 Text(" ")
             case .accepted(let word, let points, let isBingo):
                 Text("\(word.uppercased())  +\(points)\(isBingo ? "  ·  full rack!" : "")")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.positive)
             case .repeated(let word):
-                Text("Already found \(word.uppercased())").foregroundStyle(.secondary)
+                Text("Already found \(word.uppercased())").foregroundStyle(Theme.textSecondary)
             case .rejected(let reason):
-                Text(reason).foregroundStyle(.secondary)
+                Text(reason).foregroundStyle(Theme.textSecondary)
             }
         }
         .font(.callout.weight(.medium))

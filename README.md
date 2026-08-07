@@ -7,7 +7,7 @@ It keeps score across sittings, shows you the words you missed, and — unlike t
 tells you nothing you can't act on.
 
 <p align="center">
-  <img src="docs/game-light.png" alt="A round in progress: the board shows a slot for every word in the rack, filled in as you find them" width="720">
+  <img src="docs/game-dark.png" alt="A round in progress: the board shows a slot for every word in the rack, filled in as you find them" width="720">
 </p>
 
 ---
@@ -97,6 +97,15 @@ stays winnable.
 **It sounds calm.** Every tone is synthesized from a single pentatonic scale, so nothing ever
 clashes. A word you got wrong is a soft low note, not a buzzer. The ten-second warning is one
 tone, not a ticking clock.
+
+**It looks calm too.** Deep plum rather than black, soft lavender rather than white — a flat
+white field behind a running clock is tiring. It opens dark; **View → Appearance** switches to
+light or follows the system. Both schemes are checked against WCAG contrast ratios: body text
+clears 12:1, and the tightest pair measures 4.8:1 against a 4.5 floor.
+
+<p align="center">
+  <img src="docs/game-light.png" alt="The same board in the light appearance" width="720">
+</p>
 
 ---
 
