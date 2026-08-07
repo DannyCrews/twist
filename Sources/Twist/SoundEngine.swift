@@ -172,7 +172,7 @@ final class SoundEngine {
         // Still not a buzzer. It should land as "not that one", not as a reprimand.
         buffers["reject"] = render(notes: [
             Note(
-                frequency: 196.00, start: 0, duration: 1.1, gain: 0.17, attack: 0.05,
+                frequency: 196.00, start: 0, duration: 1.1, gain: 0.36, attack: 0.05,
                 partials: [
                     (1.00, 1.00, 0.5), (1.48, 0.55, 1.4), (2.13, 0.34, 2.0),
                     (2.87, 0.20, 2.8), (3.76, 0.10, 3.6),
