@@ -51,6 +51,25 @@ struct ShippedLexicon {
     #expect(survivors.isEmpty, "blocked words are still playable: \(survivors.sorted())")
 }
 
+@Test func noUndefinedWordSurvivedIntoTheShippedLexicon() throws {
+    // The premise: a word no established dictionary defines is one nobody will miss, and one
+    // the definition bubble could never explain. This asserts the committed list was actually
+    // applied — it removed 60 board targets, most of them surnames WordNet carries obscure
+    // senses for (`granger`, `hatcher`, `silva`), plus ~3,900 rare entries like `abfarad`.
+    let url = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("Sources/dicttool/undefined.txt")
+    let text = try String(contentsOf: url, encoding: .utf8)
+    let undefined = text.split(separator: "\n")
+        .map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
+        .filter { !$0.isEmpty && !$0.hasPrefix("#") }
+    #expect(undefined.count > 1_000, "undefined list looks empty — is the path still right?")
+
+    let lexicon = ShippedLexicon.lexicon
+    let survivors = undefined.filter { lexicon.entry(for: $0) != nil }
+    #expect(survivors.isEmpty, "undefined words are still playable: \(survivors.prefix(20))")
+}
+
 @Test func everyRackCanBeFinished() {
     // The bingo word is the gate on advancing, so a rack without a findable one is unplayable.
     // Sampled rather than exhaustive: the full pass lives in `dicttool verify`, which the

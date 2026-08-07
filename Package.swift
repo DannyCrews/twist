@@ -16,7 +16,7 @@ let package = Package(
             name: "dicttool",
             dependencies: ["TwistKit"],
             // Read from the working directory at build time, not bundled into the tool.
-            exclude: ["blocklist.txt"]
+            exclude: ["blocklist.txt", "undefined.txt"]
         ),
         .testTarget(name: "TwistKitTests", dependencies: ["TwistKit"]),
         .testTarget(name: "TwistAppTests", dependencies: ["Twist", "TwistKit"]),

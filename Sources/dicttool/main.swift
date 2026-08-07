@@ -8,6 +8,7 @@ func run() async throws {
     case "build": try await build()
     case "stats": try await stats()
     case "verify": try verify()
+    case "undefined": try await regenerateUndefined()
     case "sample": try sample()
     case let other:
         throw Failure("unknown command '\(other)'; expected build, stats, or verify")
@@ -23,7 +24,8 @@ func build() async throws {
     let blocked = try await loadBlocklist()
     let wordNet = try await WordNet.load()
     let result = buildLexicon(
-        words: words, frequencies: frequencies, blocked: blocked, wordNet: wordNet)
+        words: words, frequencies: frequencies, blocked: blocked, wordNet: wordNet,
+        undefined: Undefined.load())
 
     let text = LexiconFile.encode(entries: result.entries, puzzles: result.puzzles)
     try FileManager.default.createDirectory(
@@ -50,6 +52,24 @@ func build() async throws {
                     \(result.skippedBands.values.reduce(0, +).formatted()) racks outside the \
         \(Tuning.commonWordBand.lowerBound)–\(Tuning.commonWordBand.upperBound) common-word band
         """)
+}
+
+// MARK: - undefined
+
+/// Rebuilds the committed list of words no dictionary defines. Slow — it asks the system
+/// dictionary about every candidate — and deliberately not part of `build`.
+func regenerateUndefined() async throws {
+    async let enable = loadEnable()
+    async let subtlex = loadFrequencies()
+    let (words, frequencies) = try await (enable, subtlex)
+    let wordNet = try await WordNet.load()
+    let blocked = try await loadBlocklist()
+
+    let candidates = words.filter {
+        Tuning.wordLengths.contains($0.count) && !blocked.contains($0)
+            && (wordNet.knows($0) || frequencies.count($0) >= Tuning.cullFrequencyFloor)
+    }
+    try Undefined.regenerate(candidates: candidates)
 }
 
 // MARK: - stats

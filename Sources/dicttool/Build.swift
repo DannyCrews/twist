@@ -53,7 +53,7 @@ struct BuildResult {
 
 func buildLexicon(
     words: [String], frequencies: Frequencies, blocked: Set<String> = [],
-    wordNet: WordNet? = nil
+    wordNet: WordNet? = nil, undefined: Set<String> = []
 ) -> BuildResult {
     // Accepted words: everything in ENABLE that a rack could physically spell, less anything
     // blocked. Blocked words are removed outright rather than merely demoted out of the common
@@ -72,6 +72,14 @@ func buildLexicon(
         // Real English, or common enough in speech that a 1990s lexical database missing it
         // says more about the database than the word.
         guard inWordNet || frequency >= Tuning.cullFrequencyFloor else {
+            culledCount += 1
+            continue
+        }
+
+        // And it must appear in a dictionary somebody could actually consult. This is what
+        // removes the surnames WordNet carries obscure senses for — `granger`, `hatcher`,
+        // `silva` — and the `abfarad`/`abvolt` residue surviving on WordNet membership alone.
+        guard !undefined.contains(word) else {
             culledCount += 1
             continue
         }
